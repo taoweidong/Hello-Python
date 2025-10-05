@@ -155,6 +155,12 @@ chmod +x build_linux.sh
 ```bash
 # 安装项目及其依赖
 uv pip install -e .
+
+# 激活虚拟环境(Windows)
+.venv\Scripts\activate
+
+# 激活虚拟环境(Linux)
+source .venv/bin/activate
 ```
 
 管理依赖：
