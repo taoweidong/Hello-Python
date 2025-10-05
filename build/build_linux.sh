@@ -1,21 +1,70 @@
 #!/bin/bash
-# Linux打包脚本
-# 自动将所有必要的资源压缩成一个zip文件
+# Linux PyInstaller打包脚本
+# 将src/click_demo.py打包成Linux可执行文件
 
-echo "正在打包Hello-Python项目..."
+echo "Starting click_demo packaging..."
+echo
 
-# 激活虚拟环境
-source ../.venv/bin/activate
+# 设置路径变量
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT_DIST_DIR="$PROJECT_DIR/dist"
+BUILD_TEMP="$SCRIPT_DIR/temp"
+BUILD_DIST_DIR="$SCRIPT_DIR/dist"
 
-# 构建项目
-echo "正在构建项目..."
-cd ..
-python3 -m pip install -e .
+echo "SCRIPT_DIR: $SCRIPT_DIR"
+echo "PROJECT_DIR: $PROJECT_DIR"
+echo "ROOT_DIST_DIR: $ROOT_DIST_DIR"
+echo "BUILD_TEMP: $BUILD_TEMP"
+echo "BUILD_DIST_DIR: $BUILD_DIST_DIR"
+echo
 
-# 创建分发zip文件
-echo "正在创建分发zip文件..."
-python3 -m build.create_dist_zip
+# 清理并创建目录
+rm -rf "$BUILD_TEMP"
+mkdir -p "$BUILD_TEMP"
 
-echo ""
-echo "打包完成！分发文件位于 dist/Hello-Python.zip"
-echo "用户解压后可直接使用，无需手动配置！"
+rm -rf "$BUILD_DIST_DIR"
+mkdir -p "$BUILD_DIST_DIR"
+
+# 复制源文件到临时目录
+echo "Copying source file..."
+cp "$PROJECT_DIR/src/click_demo.py" "$BUILD_TEMP/"
+echo
+
+# 运行PyInstaller打包
+echo "Running PyInstaller..."
+pyinstaller --onefile --distpath "$BUILD_DIST_DIR" --workpath "$BUILD_TEMP/build" --specpath "$BUILD_TEMP" "$BUILD_TEMP/click_demo.py"
+echo
+
+# 清理临时文件
+echo "Cleaning up temporary files..."
+rm -rf "$BUILD_TEMP"
+echo
+
+echo "Packaging complete! Executable is located at: $BUILD_DIST_DIR/click_demo"
+echo
+
+# 检查生成的可执行文件
+if [ -f "$BUILD_DIST_DIR/click_demo" ]; then
+    echo "Executable successfully generated."
+    
+    # 创建根目录下的dist目录（如果不存在）
+    if [ ! -d "$ROOT_DIST_DIR" ]; then
+        echo "Creating root dist directory..."
+        mkdir -p "$ROOT_DIST_DIR"
+    fi
+    
+    # 复制可执行文件到根目录下的dist目录
+    echo "Copying executable to root dist directory..."
+    cp "$BUILD_DIST_DIR/click_demo" "$ROOT_DIST_DIR/"
+    
+    if [ -f "$ROOT_DIST_DIR/click_demo" ]; then
+        echo "Executable successfully archived to root dist directory."
+    else
+        echo "Warning: Failed to copy executable to root dist directory."
+    fi
+else
+    echo "Warning: Executable not found."
+fi
+
+echo

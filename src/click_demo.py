@@ -10,17 +10,40 @@ import sys
 import os
 import logging
 from pathlib import Path
-import click
 
-# 动态定位项目根目录（确保打包后能正确导入）
-CURRENT_DIR = Path.cwd()
-PROJECT_ROOT = CURRENT_DIR.parent if CURRENT_DIR.name == 'dist' else CURRENT_DIR
+# 修复打包后路径问题
+def get_project_root():
+    """获取项目根目录"""
+    # 如果是打包后的可执行文件
+    if getattr(sys, 'frozen', False):
+        # frozen状态下，exe文件位于dist目录中
+        exe_dir = Path(sys.executable).parent
+        # 项目根目录是exe文件所在目录的父目录
+        return exe_dir.parent
+    else:
+        # 开发状态下，使用当前工作目录
+        return Path.cwd()
+
+# 设置项目根目录
+PROJECT_ROOT = get_project_root()
 
 # 添加项目根目录到sys.path
 sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from src.config.settings import settings
-
+# 现在可以安全地导入项目模块
+try:
+    from src.config.settings import settings
+except ImportError:
+    # 如果直接运行脚本时的备用导入方式
+    try:
+        import src.config.settings as settings_module
+        settings = settings_module.settings
+    except ImportError:
+        # 创建一个简单的配置对象作为后备
+        class MockSettings:
+            APP_ENV = "development"
+        settings = MockSettings()
 
 @click.command()
 @click.option('--count', default=1, help='Number of greetings.')
@@ -29,7 +52,7 @@ def hello(count, name):
     """Simple program that greets NAME for a total of COUNT times."""
     for x in range(count):
         click.echo(f"Hello {name}!")
-        click.echo(f"{settings.APP_ENV}")
+        click.echo(f"Environment: {settings.APP_ENV}")
 
 @click.command()
 @click.option('--verbose', is_flag=True, help="Enable verbose output.")
