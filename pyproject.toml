@@ -28,3 +28,4 @@ test = [
 
 [project.scripts]
 Hello-Python = "src.main:cli"
+build-dist = "build.create_dist_zip:create_dist_zip"

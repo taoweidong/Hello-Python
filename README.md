@@ -124,11 +124,22 @@ chmod +x build_linux.sh
 ./build_linux.sh
 ```
 
+### 一键分发包
+
+新的打包流程会自动创建一个包含所有必要资源的zip文件，用户解压后可直接使用：
+
+1. 运行对应平台的打包脚本（如上所示）
+2. 在 `dist/` 目录下找到 `Hello-Python.zip` 文件
+3. 将zip文件发送给用户
+4. 用户解压后可直接运行应用，无需手动配置
+
 **运行打包后应用**：
-1. 进入打包目录：`cd dist\Hello-Python` (Windows) 或 `cd dist/Hello-Python` (Linux)
-2. 创建配置文件：`cp .env.example .env`
-3. 编辑 `.env` 文件
-4. 运行应用：`Hello-Python.exe process_data` (Windows) 或 `./Hello-Python process_data` (Linux)
+1. 解压 `Hello-Python.zip` 文件
+2. 进入解压后的目录
+3. 根据需要编辑 `.env` 配置文件（已包含默认配置）
+4. 运行应用：`run.bat` (Windows) 或 `./run.sh` (Linux)
+
+**注意**：用户无需手动创建配置文件，`.env` 文件已包含在分发包中。
 
 ## 核心功能
 
@@ -224,8 +235,9 @@ python -m coverage html
 
 ## 优势总结
 
-1. **文件归档完美**：所有打包生成的文件仅存在于`dist/Hello-Python/`，项目根目录无任何临时文件或残留
-2. **环境安全**：`.env.example`被打包到`dist/Hello-Python/`，提供配置模板
+1. **文件归档完美**：所有打包生成的文件仅存在于`dist/`目录，项目根目录无任何临时文件或残留
+2. **一键分发**：自动创建包含所有必要资源的zip文件，用户解压后可直接使用
+3. **配置完整**：`.env`配置文件已包含在分发包中，用户无需手动创建
 3. **跨平台支持**：Windows和Linux的打包脚本已优化
 4. **动态路径定位**：`main.py`动态定位项目根目录，确保打包后能正确导入
 5. **Pydantic集成**：使用Pydantic进行配置管理和数据校验
@@ -239,5 +251,5 @@ python -m coverage html
 ## 最终验证
 
 1. 执行打包脚本后，项目根目录**无任何新文件**（除`build/`目录外）
-2. 打包生成的文件**仅存在于`dist/Hello-Python/`**
-3. 运行打包后的应用**无需修改任何配置**（只需创建`.env`）
+2. 打包生成的文件**仅存在于`dist/`目录**
+3. 运行打包后的应用**无需手动配置**（所有必要文件已包含在分发包中）
