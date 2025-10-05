@@ -69,7 +69,7 @@ def demo_config_validation():
     print("=== 配置校验示例 ===\n")
     
     # 从环境变量加载配置
-    from src.config import settings
+    from src.config.settings import settings
     
     print("当前配置:")
     print(f"  应用名称: {settings.APP_NAME}")

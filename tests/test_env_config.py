@@ -1,8 +1,7 @@
 # tests/test_env_config.py
 import unittest
 import os
-import tempfile
-from src.config import settings
+from src.config.settings import settings
 
 class TestEnvConfig(unittest.TestCase):
     def test_config_files_exist(self):

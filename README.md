@@ -234,8 +234,8 @@ PROJECT_ROOT = CURRENT_DIR.parent if CURRENT_DIR.name == 'dist' else CURRENT_DIR
 # 添加项目根目录到sys.path
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.config import settings
-from src.logger import setup_logger
+from src.config.settings import settings
+from src.config.logging_config import setup_logger
 from src.data_processor import load_data, process_data
 
 @click.group()
@@ -505,9 +505,8 @@ python examples/pydantic_validation_demo.py
 # src/database.py
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 from datetime import datetime
-from src.config import settings
+from src.config.settings import settings
 
 # 创建基类
 Base = declarative_base()
@@ -715,7 +714,7 @@ uv pip install -e .
 
 ## 13. 项目文档（README.md）
 
-```markdown
+```
 # 项目名称
 
 [项目描述]

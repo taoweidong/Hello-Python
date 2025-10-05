@@ -1,7 +1,7 @@
 # tests/test_config.py
 import unittest
 import os
-from src.config import settings
+from src.config.settings import settings
 
 class TestConfig(unittest.TestCase):
     def test_config_loading(self):

@@ -10,7 +10,7 @@ import sys
 # 添加src目录到路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.config import settings
+from src.config.settings import settings
 
 def demo_env_config():
     """演示环境配置"""

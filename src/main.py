@@ -12,8 +12,8 @@ PROJECT_ROOT = CURRENT_DIR.parent if CURRENT_DIR.name == 'dist' else CURRENT_DIR
 # 添加项目根目录到sys.path
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.config import settings
-from src.logger import setup_logger
+from src.config.settings import settings
+from src.config.logging_config import setup_logger
 from src.data_processor import load_data, process_data
 
 @click.group()

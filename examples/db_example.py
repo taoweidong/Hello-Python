@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from src.db import DatabaseManager, transactional, with_db_session, CRUDMixin
 from src.db.example_models import User, Product, Order
-from src.logger import setup_logger
+from src.config.logging_config import setup_logger
 from loguru import logger
 from sqlalchemy.orm import Session
 

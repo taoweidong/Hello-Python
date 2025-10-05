@@ -1,7 +1,7 @@
-# src/logger.py
+# src/config/logging_config.py
 import logging
 from loguru import logger
-from src.config import settings
+from src.config.settings import settings
 
 def setup_logger():
     """设置日志记录器"""
