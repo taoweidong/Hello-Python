@@ -1,0 +1,66 @@
+2025-10-05 12:17:55 | INFO | __main__:main:160 | === 数据库操作库使用示例 ===
+
+2025-10-05 12:17:55 | INFO | __main__:setup_database:29 | 数据库表已创建
+2025-10-05 12:17:55 | INFO | __main__:main:166 | 1. 创建用户和产品:
+2025-10-05 12:17:55 | INFO | __main__:create_user_and_product:45 | 创建用户: <User(id=1, name='Alice', email='alice@example.com')>
+2025-10-05 12:17:55 | INFO | __main__:create_user_and_product:49 | 创建产品: <Product(id=1, name='Python书籍', price=5999)>
+2025-10-05 12:17:55 | INFO | __main__:main:174 | 
+2025-10-05 12:17:55 | INFO | __main__:main:177 | 2. 创建订单:
+2025-10-05 12:17:55 | INFO | __main__:create_order:77 | 创建订单: <Order(id=1, user_id=1, product_id=1, quantity=2)>
+2025-10-05 12:17:55 | INFO | __main__:main:185 | 
+2025-10-05 12:17:55 | INFO | __main__:main:188 | 3. 列出所有数据:
+2025-10-05 12:17:55 | INFO | __main__:list_users:85 | 所有用户:
+2025-10-05 12:17:55 | INFO | __main__:list_users:87 |   {'id': 1, 'name': 'Alice', 'age': 25, 'email': 'alice@example.com', 'created_at': '2025-10-05T04:17:55.860688', 'updated_at': '2025-10-05T04:17:55.860688'}
+2025-10-05 12:17:55 | INFO | __main__:list_products:94 | 所有产品:
+2025-10-05 12:17:55 | INFO | __main__:list_products:96 |   {'id': 1, 'name': 'Python书籍', 'price': 5999, 'description': '示例产品', 'created_at': '2025-10-05T04:17:55.862824', 'updated_at': '2025-10-05T04:17:55.862824'}
+2025-10-05 12:17:55 | INFO | __main__:list_orders:103 | 所有订单:
+2025-10-05 12:17:55 | INFO | __main__:list_orders:105 |   {'id': 1, 'user_id': 1, 'product_id': 1, 'quantity': 2, 'total_price': 11998, 'created_at': '2025-10-05T04:17:55.871320', 'updated_at': '2025-10-05T04:17:55.871320'}
+2025-10-05 12:17:55 | INFO | __main__:main:193 | 
+2025-10-05 12:17:55 | INFO | __main__:main:196 | 4. 演示关联查询:
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:139 | === 关联查询示例 ===
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:145 | 订单详情（包含用户和产品信息）:
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:151 |   订单ID: 1
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:152 |     用户: Alice (alice@example.com)
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:153 |     产品: Python书籍 (¥59.99)
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:154 |     数量: 2
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:155 |     总价: ¥119.98
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:156 | 
+2025-10-05 12:17:55 | INFO | __main__:main:199 | 
+2025-10-05 12:17:55 | INFO | __main__:main:202 | 5. 更新用户:
+2025-10-05 12:17:55 | INFO | __main__:update_user:113 | 更新用户: {'id': 1, 'name': 'Alice Smith', 'age': 26, 'email': 'alice@example.com', 'created_at': '2025-10-05T04:17:55.860688', 'updated_at': '2025-10-05T04:17:55.889313'}
+2025-10-05 12:17:55 | INFO | __main__:main:205 | 
+2025-10-05 12:17:55 | INFO | __main__:main:208 | 6. 根据邮箱查找用户:
+2025-10-05 12:17:55 | INFO | __main__:find_users_by_email:132 | 邮箱为alice@example.com的用户:
+2025-10-05 12:17:55 | INFO | __main__:find_users_by_email:134 |   {'id': 1, 'name': 'Alice', 'age': 25, 'email': 'alice@example.com', 'created_at': '2025-10-05T04:17:55.860688', 'updated_at': '2025-10-05T04:17:55.860688'}
+2025-10-05 12:17:55 | INFO | __main__:main:211 | 
+2025-10-05 12:17:55 | INFO | __main__:main:214 | 7. 创建另一个用户:
+2025-10-05 12:17:55 | INFO | __main__:create_user_and_product:45 | 创建用户: <User(id=2, name='Bob', email='bob@example.com')>
+2025-10-05 12:17:55 | INFO | __main__:create_user_and_product:49 | 创建产品: <Product(id=2, name='Java书籍', price=6999)>
+2025-10-05 12:17:55 | INFO | __main__:create_order:77 | 创建订单: <Order(id=2, user_id=2, product_id=2, quantity=1)>
+2025-10-05 12:17:55 | INFO | __main__:main:224 | 
+2025-10-05 12:17:55 | INFO | __main__:main:227 | 8. 列出所有数据:
+2025-10-05 12:17:55 | INFO | __main__:list_users:85 | 所有用户:
+2025-10-05 12:17:55 | INFO | __main__:list_users:87 |   {'id': 1, 'name': 'Alice', 'age': 25, 'email': 'alice@example.com', 'created_at': '2025-10-05T04:17:55.860688', 'updated_at': '2025-10-05T04:17:55.860688'}
+2025-10-05 12:17:55 | INFO | __main__:list_users:87 |   {'id': 2, 'name': 'Bob', 'age': 25, 'email': 'bob@example.com', 'created_at': '2025-10-05T04:17:55.894157', 'updated_at': '2025-10-05T04:17:55.894157'}
+2025-10-05 12:17:55 | INFO | __main__:list_products:94 | 所有产品:
+2025-10-05 12:17:55 | INFO | __main__:list_products:96 |   {'id': 1, 'name': 'Python书籍', 'price': 5999, 'description': '示例产品', 'created_at': '2025-10-05T04:17:55.862824', 'updated_at': '2025-10-05T04:17:55.862824'}
+2025-10-05 12:17:55 | INFO | __main__:list_products:96 |   {'id': 2, 'name': 'Java书籍', 'price': 6999, 'description': '示例产品', 'created_at': '2025-10-05T04:17:55.895162', 'updated_at': '2025-10-05T04:17:55.895162'}
+2025-10-05 12:17:55 | INFO | __main__:list_orders:103 | 所有订单:
+2025-10-05 12:17:55 | INFO | __main__:list_orders:105 |   {'id': 1, 'user_id': 1, 'product_id': 1, 'quantity': 2, 'total_price': 11998, 'created_at': '2025-10-05T04:17:55.871320', 'updated_at': '2025-10-05T04:17:55.871320'}
+2025-10-05 12:17:55 | INFO | __main__:list_orders:105 |   {'id': 2, 'user_id': 2, 'product_id': 2, 'quantity': 1, 'total_price': 6999, 'created_at': '2025-10-05T04:17:55.899675', 'updated_at': '2025-10-05T04:17:55.899675'}
+2025-10-05 12:17:55 | INFO | __main__:main:232 | 
+2025-10-05 12:17:55 | INFO | __main__:main:235 | 9. 演示关联查询:
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:139 | === 关联查询示例 ===
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:145 | 订单详情（包含用户和产品信息）:
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:151 |   订单ID: 1
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:152 |     用户: Alice (alice@example.com)
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:153 |     产品: Python书籍 (¥59.99)
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:154 |     数量: 2
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:155 |     总价: ¥119.98
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:156 | 
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:151 |   订单ID: 2
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:152 |     用户: Bob (bob@example.com)
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:153 |     产品: Java书籍 (¥69.99)
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:154 |     数量: 1
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:155 |     总价: ¥69.99
+2025-10-05 12:17:55 | INFO | __main__:demonstrate_joins:156 | 

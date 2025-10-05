@@ -47,9 +47,7 @@ class TestDatabaseSimple(unittest.TestCase):
         """测试创建和查询用户"""
         with self.db_manager.get_db_session() as db:
             # 创建用户
-            user = User(name="Alice", email="alice@example.com", age=25)
-            db.add(user)
-            db.flush()  # 获取ID但不提交
+            user = User.create(db, name="Alice", email="alice@example.com", age=25)
             
             self.assertIsNotNone(user.id)
             self.assertEqual(user.name, "Alice")
@@ -57,7 +55,8 @@ class TestDatabaseSimple(unittest.TestCase):
             self.assertEqual(user.age, 25)
             
             # 查询用户
-            queried_user = db.query(User).filter(User.id == user.id).first()
+            user_id = int(user.id) if hasattr(user.id, '__int__') else user.id
+            queried_user = User.get_by_id(db, user_id)
             self.assertIsNotNone(queried_user)
             self.assertEqual(queried_user.name, "Alice")
             self.assertEqual(queried_user.email, "alice@example.com")
