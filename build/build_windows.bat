@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 REM Windows打包脚本
 REM 自动将所有必要的资源压缩成一个zip文件
 
