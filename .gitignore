@@ -9,6 +9,13 @@ dist/
 *.spec
 build/
 
+# Coverage reports
+.coverage
+htmlcov/
+
+# Logs
+logs/
+
 # Environment files
 .env
 
