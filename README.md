@@ -207,9 +207,34 @@ uv pip install -r requirements.txt
 
 项目支持运行单元测试并生成覆盖率报告：
 
+### 测试目录结构
+
+测试文件已按照src目录结构重新组织：
+
+```
+tests/
+├── config/                 # 配置相关测试
+│   ├── test_settings.py    # 设置模块测试
+│   └── test_logging_config.py  # 日志配置测试
+├── db/                     # 数据库相关测试
+│   ├── test_database.py    # 数据库功能测试
+│   └── test_simple.py      # 数据库简单功能测试
+├── test_cli.py             # CLI测试
+├── test_click_demo.py      # Click命令行工具测试
+├── test_data_processor.py  # 数据处理模块测试
+├── test_env_config.py      # 环境配置测试
+├── test_pydantic_validation.py  # Pydantic数据验证测试
+└── test_runner.py          # 测试入口文件
+```
+
+### 运行测试
+
 ```bash
 # 运行所有测试
 python -m pytest tests/
+
+# 或者使用测试入口文件运行所有测试
+python tests/test_runner.py
 
 # 运行测试并生成覆盖率报告
 python -m pytest tests/ --cov=src

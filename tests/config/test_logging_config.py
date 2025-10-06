@@ -1,4 +1,4 @@
-# tests/test_logger.py
+# tests/config/test_logging_config.py
 import unittest
 from src.config.logging_config import setup_logger
 

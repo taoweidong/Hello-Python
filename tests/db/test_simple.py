@@ -1,4 +1,4 @@
-# tests/test_db_simple.py
+# tests/db/test_simple.py
 """
 数据库操作库简单测试
 测试封装的数据库基本功能
@@ -29,7 +29,7 @@ class TestDatabaseSimple(unittest.TestCase):
     def tearDown(self):
         """测试后清理"""
         # 确保关闭所有数据库连接
-        self.db_manager.engine.dispose()
+        self.db_manager.get_engine().dispose()
         # 删除临时数据库文件
         if os.path.exists(self.temp_db.name):
             try:
@@ -40,8 +40,8 @@ class TestDatabaseSimple(unittest.TestCase):
     def test_database_manager_creation(self):
         """测试数据库管理器创建"""
         db_manager = DatabaseManager()
-        self.assertIsNotNone(db_manager.engine)
-        self.assertIsNotNone(db_manager.SessionLocal)
+        self.assertIsNotNone(db_manager.get_engine())
+        self.assertIsNotNone(db_manager.get_session_factory())
     
     def test_create_and_query_user(self):
         """测试创建和查询用户"""
@@ -55,7 +55,7 @@ class TestDatabaseSimple(unittest.TestCase):
             self.assertEqual(user.age, 25)
             
             # 查询用户
-            user_id = int(user.id) if hasattr(user.id, '__int__') else user.id
+            user_id = int(user.id)
             queried_user = User.get_by_id(db, user_id)
             self.assertIsNotNone(queried_user)
             self.assertEqual(queried_user.name, "Alice")

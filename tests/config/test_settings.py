@@ -1,4 +1,4 @@
-# tests/test_config.py
+# tests/config/test_settings.py
 import unittest
 import os
 from src.config.settings import settings

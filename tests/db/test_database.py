@@ -1,4 +1,4 @@
-# tests/test_db.py
+# tests/db/test_database.py
 """
 数据库操作库测试
 测试封装的数据库功能
@@ -30,7 +30,7 @@ class TestDatabase(unittest.TestCase):
     def tearDown(self):
         """测试后清理"""
         # 确保关闭所有数据库连接
-        self.db_manager.engine.dispose()
+        self.db_manager.get_engine().dispose()
         # 等待一段时间让文件解锁
         import time
         time.sleep(0.1)
@@ -45,8 +45,8 @@ class TestDatabase(unittest.TestCase):
     def test_database_manager_creation(self):
         """测试数据库管理器创建"""
         db_manager = DatabaseManager()
-        self.assertIsNotNone(db_manager.engine)
-        self.assertIsNotNone(db_manager.SessionLocal)
+        self.assertIsNotNone(db_manager.get_engine())
+        self.assertIsNotNone(db_manager.get_session_factory())
     
     def test_create_user(self):
         """测试创建用户"""
@@ -64,7 +64,7 @@ class TestDatabase(unittest.TestCase):
             created_user = User.create(db, name="Bob", email="bob@example.com", age=30)
             
             # 确保ID是整数类型
-            user_id = int(created_user.id) if hasattr(created_user.id, '__int__') else created_user.id
+            user_id = int(created_user.id)
             
             # 再获取用户
             user = User.get_by_id(db, user_id)
@@ -92,7 +92,7 @@ class TestDatabase(unittest.TestCase):
             user = User.create(db, name="Alice", email="alice@example.com", age=25)
             
             # 确保ID是整数类型
-            user_id = int(user.id) if hasattr(user.id, '__int__') else user.id
+            user_id = int(user.id)
             
             # 更新用户
             updated_user = User.update(db, user_id, name="Alice Smith", age=26)
@@ -107,7 +107,7 @@ class TestDatabase(unittest.TestCase):
             user = User.create(db, name="Alice", email="alice@example.com", age=25)
             
             # 确保ID是整数类型
-            user_id = int(user.id) if hasattr(user.id, '__int__') else user.id
+            user_id = int(user.id)
             
             # 删除用户
             result = User.delete(db, user_id)
