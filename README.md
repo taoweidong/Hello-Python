@@ -34,7 +34,8 @@ Hello-Python/
 │       ├── decorators.py
 │       ├── crud.py
 │       ├── models.py
-│       └── example_models.py
+│       ├── example_models.py
+│       └── config.py
 ├── tests/
 │   ├── __init__.py
 │   ├── test_config.py
@@ -50,6 +51,9 @@ Hello-Python/
 │   ├── env_config_demo.py
 │   ├── click_demo_guide.py
 │   └── db_example.py
+├── docs/
+│   ├── multi_database_support.md
+│   └── auto_database_initialization.md
 └── README.md
 ```
 
@@ -105,6 +109,12 @@ python src/click_demo.py --help
 
 # 运行数据库示例
 python examples/db_example.py
+
+# 运行多数据库示例
+python examples/db_switch_database_example.py
+
+# 运行自动初始化数据库示例
+python examples/db_auto_init_example.py
 ```
 
 ## 打包流程
@@ -157,6 +167,12 @@ chmod +x build_linux.sh
 
 ### 数据库操作库
 项目封装了一套数据库操作库，支持通过装饰器的方式快速使用，并封装了单表的增删改查功能。
+
+### 多数据库支持
+项目支持多数据库操作，可以通过装饰器参数快速切换不同的数据库。详细使用说明请参见 [docs/multi_database_support.md](docs/multi_database_support.md)。
+
+### 数据库自动初始化
+数据库在应用启动时自动配置和初始化，无需手动操作。详细使用说明请参见 [docs/auto_database_initialization.md](docs/auto_database_initialization.md)。
 
 ## 依赖管理
 
@@ -245,8 +261,10 @@ python -m coverage html
 7. **现代化依赖管理**：使用`uv`作为包管理工具，提供快速依赖解析和安装
 8. **Click命令行接口**：提供丰富的命令行接口示例
 9. **数据库操作库**：封装了完整的数据库操作功能
-10. **loguru日志**：统一日志处理
-11. **测试覆盖率**：支持生成详细的单元测试覆盖率报告
+10. **多数据库支持**：支持通过装饰器参数快速切换不同数据库
+11. **数据库自动初始化**：应用启动时自动配置和初始化数据库
+12. **loguru日志**：统一日志处理
+13. **测试覆盖率**：支持生成详细的单元测试覆盖率报告
 
 ## 最终验证
 

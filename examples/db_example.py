@@ -1,7 +1,7 @@
 # examples/db_example.py
 """
 数据库操作库使用示例
-演示如何使用封装的数据库功能
+演示如何使用封装的数据库功能，包括多数据库支持
 """
 
 import sys
@@ -10,7 +10,7 @@ import os
 # 添加src目录到路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.db import DatabaseManager, transactional, with_db_session, CRUDMixin
+from src.db import transactional, with_db_session, db_manager
 from src.db.example_models import User, Product, Order
 from src.config.logging_config import setup_logger
 from loguru import logger
@@ -19,16 +19,8 @@ from sqlalchemy.orm import Session
 # 设置日志
 setup_logger()
 
-# 创建数据库管理器实例
-db_manager = DatabaseManager("sqlite:///./example.db")
-
-def setup_database():
-    """设置数据库"""
-    # 创建表
-    db_manager.create_tables()
-    logger.info("数据库表已创建")
-
-@transactional
+# 原有的装饰器用法（使用默认数据库）
+@transactional()
 def create_user_and_product(db: Session, user_name: str, user_email: str, product_name: str, product_price: int):
     """
     创建用户和产品（在同一个事务中）
@@ -50,7 +42,24 @@ def create_user_and_product(db: Session, user_name: str, user_email: str, produc
     
     return user.id, product.id
 
-@transactional
+# 新的装饰器用法（指定数据库）
+@transactional("analytics")
+def create_analytics_user(db: Session, user_name: str, user_email: str):
+    """
+    在分析数据库中创建用户
+    
+    Args:
+        db: 数据库会话
+        user_name: 用户名
+        user_email: 用户邮箱
+    """
+    # 创建用户
+    user = User.create(db, name=user_name, email=user_email, age=25)
+    logger.info(f"在分析数据库中创建用户: {user}")
+    
+    return user.id
+
+@transactional()
 def create_order(db: Session, user_id: int, product_id: int, quantity: int = 1):
     """
     创建订单
@@ -159,9 +168,6 @@ def main():
     """主函数"""
     logger.info("=== 数据库操作库使用示例 ===\n")
     
-    # 设置数据库
-    setup_database()
-    
     # 创建用户和产品
     logger.info("1. 创建用户和产品:")
     with db_manager.get_db_session() as db:
@@ -234,6 +240,19 @@ def main():
     # 演示关联查询
     logger.info("9. 演示关联查询:")
     demonstrate_joins()
+    
+    # 演示多数据库功能
+    logger.info("")
+    logger.info("=== 多数据库功能演示 ===")
+    
+    # 在分析数据库中创建用户
+    logger.info("10. 在分析数据库中创建用户:")
+    try:
+        with db_manager.get_db_session("analytics") as db:
+            analytics_user_id = create_analytics_user(db, "Charlie", "charlie@analytics.com")
+    except Exception as e:
+        logger.error(f"在分析数据库中创建用户时出错: {e}")
+        return
 
 if __name__ == "__main__":
     main()
