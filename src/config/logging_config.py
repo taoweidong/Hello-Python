@@ -18,6 +18,9 @@ def setup_logger():
     
     # 添加文件输出
     try:
+        import os
+        # 确保logs目录存在
+        os.makedirs("logs", exist_ok=True)
         logger.add(
             "logs/app.log",
             level=settings.LOG_LEVEL,
