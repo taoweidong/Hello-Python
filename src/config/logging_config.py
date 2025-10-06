@@ -1,5 +1,6 @@
 # src/config/logging_config.py
 import logging
+import sys
 from loguru import logger
 from src.config.settings import settings
 
@@ -10,7 +11,7 @@ def setup_logger():
     
     # 添加控制台输出
     logger.add(
-        lambda msg: print(msg, end=''),
+        sys.stdout,
         level=settings.LOG_LEVEL,
         format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
     )
@@ -26,6 +27,6 @@ def setup_logger():
             format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} | {message}"
         )
     except Exception as e:
-        print(f"无法创建日志文件: {e}")
+        logger.warning(f"无法创建日志文件: {e}")
     
     return logger

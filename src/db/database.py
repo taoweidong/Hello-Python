@@ -10,6 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from contextlib import contextmanager
 import os
 from typing import Generator, Optional, Dict, Any
+from loguru import logger
 
 # 创建基类
 Base = declarative_base()
@@ -214,4 +215,4 @@ def initialize_databases(config: Optional[Dict[str, str]] = None, default_url: O
         try:
             db_manager.create_tables(db_name)
         except Exception as e:
-            print(f"警告: 无法为数据库 '{db_name}' 创建表: {e}")
+            logger.warning(f"警告: 无法为数据库 '{db_name}' 创建表: {e}")

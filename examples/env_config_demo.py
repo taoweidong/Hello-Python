@@ -11,18 +11,19 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from src.config.settings import settings
+from loguru import logger
 
 def demo_env_config():
     """演示环境配置"""
-    print("=== 环境配置示例 ===\n")
+    logger.info("=== 环境配置示例 ===\n")
     
-    print("当前环境配置:")
-    print(f"  应用名称: {settings.APP_NAME}")
-    print(f"  日志级别: {settings.LOG_LEVEL}")
-    print(f"  数据文件路径: {settings.DATA_FILE_PATH}")
-    print(f"  数据库URL: {settings.DATABASE_URL}")
-    print(f"  应用环境: {settings.APP_ENV}")
-    print(f"  配置字典: {settings.model_dump()}")
+    logger.info("当前环境配置:")
+    logger.info(f"  应用名称: {settings.APP_NAME}")
+    logger.info(f"  日志级别: {settings.LOG_LEVEL}")
+    logger.info(f"  数据文件路径: {settings.DATA_FILE_PATH}")
+    logger.info(f"  数据库URL: {settings.DATABASE_URL}")
+    logger.info(f"  应用环境: {settings.APP_ENV}")
+    logger.info(f"  配置字典: {settings.model_dump()}")
 
 if __name__ == "__main__":
     demo_env_config()
