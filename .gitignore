@@ -28,3 +28,11 @@ logs/
 Thumbs.db
 *.db
 *.log
+
+# Testing
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
