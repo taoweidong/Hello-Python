@@ -20,6 +20,6 @@ def setup_standalone_db():
     """
     设置独立数据库配置
     """
-    from .database import initialize_databases
+    from src.db.database import initialize_databases
     if STANDALONE_AUTO_CREATE_TABLES:
         initialize_databases(STANDALONE_DATABASE_CONFIG)

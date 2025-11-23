@@ -5,8 +5,8 @@
 
 from sqlalchemy import Column, Integer, DateTime, String
 from datetime import datetime
-from .crud import CRUDMixin
-from .database import Base  # 使用database.py中的Base
+from src.db.crud import CRUDMixin
+from src.db.database import Base  # 使用database.py中的Base
 
 class BaseModel(CRUDMixin, Base):
     """基础模型类"""

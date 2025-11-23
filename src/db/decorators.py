@@ -7,7 +7,7 @@
 from functools import wraps
 from typing import Callable, Any, Optional
 from sqlalchemy.orm import Session
-from .database import get_db, db_manager
+from src.db.database import get_db, db_manager
 
 def transactional(db_name: Optional[str] = None):
     """

@@ -6,7 +6,7 @@
 
 from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from .models import BaseModel
+from src.db.models import BaseModel
 
 class User(BaseModel):
     """用户模型"""
