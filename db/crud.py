@@ -1,4 +1,4 @@
-# src/db/crud.py
+# db/crud.py
 """
 CRUD操作混入类
 提供基本的增删改查功能
@@ -6,10 +6,7 @@ CRUD操作混入类
 
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
-
-Base = declarative_base()
 
 class CRUDMixin:
     """CRUD操作混入类"""
@@ -34,13 +31,13 @@ class CRUDMixin:
         return instance
     
     @classmethod
-    def get_by_id(cls, db: Session, id: int):
+    def get_by_id(cls, db: Session, id: str):
         """
         根据ID获取记录
         
         Args:
             db: 数据库会话
-            id: 记录ID
+            id: 记录ID (UUID字符串)
             
         Returns:
             模型实例或None
@@ -63,13 +60,13 @@ class CRUDMixin:
         return db.query(cls).offset(skip).limit(limit).all()
     
     @classmethod
-    def update(cls, db: Session, id: int, **kwargs):
+    def update(cls, db: Session, id: str, **kwargs):
         """
         更新记录
         
         Args:
             db: 数据库会话
-            id: 记录ID
+            id: 记录ID (UUID字符串)
             **kwargs: 要更新的字段值
             
         Returns:
@@ -86,13 +83,13 @@ class CRUDMixin:
         return instance
     
     @classmethod
-    def delete(cls, db: Session, id: int) -> bool:
+    def delete(cls, db: Session, id: str) -> bool:
         """
         删除记录
         
         Args:
             db: 数据库会话
-            id: 记录ID
+            id: 记录ID (UUID字符串)
             
         Returns:
             bool: 是否成功删除
@@ -121,3 +118,4 @@ class CRUDMixin:
             if hasattr(cls, key):
                 query = query.filter(getattr(cls, key) == value)
         return query.all()
+

@@ -1,4 +1,4 @@
-# src/db/database.py
+# db/database.py
 """
 数据库管理器
 提供数据库连接和会话管理功能
@@ -216,3 +216,4 @@ def initialize_databases(config: Optional[Dict[str, str]] = None, default_url: O
             db_manager.create_tables(db_name)
         except Exception as e:
             logger.warning(f"警告: 无法为数据库 '{db_name}' 创建表: {e}")
+

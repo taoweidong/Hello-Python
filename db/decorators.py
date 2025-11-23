@@ -1,4 +1,4 @@
-# src/db/decorators.py
+# db/decorators.py
 """
 数据库装饰器
 提供事务处理等装饰器功能
@@ -7,7 +7,7 @@
 from functools import wraps
 from typing import Callable, Any, Optional
 from sqlalchemy.orm import Session
-from src.db.database import get_db, db_manager
+from .database import get_db, db_manager
 
 def transactional(db_name: Optional[str] = None):
     """
@@ -98,3 +98,4 @@ def with_db_session(db_name: Optional[str] = None):
         
         return wrapper
     return decorator
+

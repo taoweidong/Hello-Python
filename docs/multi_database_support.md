@@ -16,7 +16,7 @@
 ### 1. 配置多个数据库
 
 ```python
-from src.db import db_manager
+from db import db_manager
 
 # 添加多个数据库配置
 db_manager.add_database("default", "sqlite:///./default.db")
@@ -28,7 +28,7 @@ db_manager.add_database("logs", "sqlite:///./logs.db")
 
 #### 事务装饰器
 ```python
-from src.db import transactional
+from db import transactional
 
 @transactional("analytics")
 def create_analytics_user(db: Session, name: str, email: str):
@@ -39,7 +39,7 @@ def create_analytics_user(db: Session, name: str, email: str):
 
 #### 会话装饰器
 ```python
-from src.db import with_db_session
+from db import with_db_session
 
 @with_db_session("logs")
 def log_user_action(db: Session, user_id: int, action: str):
@@ -51,7 +51,7 @@ def log_user_action(db: Session, user_id: int, action: str):
 ### 3. 手动切换数据库
 
 ```python
-from src.db import db_manager
+from db import db_manager
 
 # 设置当前线程的数据库
 db_manager.set_current_db_name("analytics")
@@ -64,8 +64,8 @@ with db_manager.get_db_session("analytics") as db:
 ## 完整示例
 
 ```python
-from src.db import db_manager, transactional, with_db_session
-from src.db.example_models import User
+from db import db_manager, transactional, with_db_session
+from db.example_models import User
 from sqlalchemy.orm import Session
 
 # 配置数据库

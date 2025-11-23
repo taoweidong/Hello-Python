@@ -1,4 +1,4 @@
-# src/db/example_models.py
+# db/example_models.py
 """
 示例数据库模型
 演示如何使用数据库操作库
@@ -6,7 +6,7 @@
 
 from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from src.db.models import BaseModel
+from .models import BaseModel
 
 class User(BaseModel):
     """用户模型"""
@@ -65,8 +65,8 @@ class Order(BaseModel):
     
     __tablename__ = 'orders'
     
-    user_id = Column(Integer, ForeignKey('users.id'))
-    product_id = Column(Integer, ForeignKey('products.id'))
+    user_id = Column(String(36), ForeignKey('users.id'))
+    product_id = Column(String(36), ForeignKey('products.id'))
     quantity = Column(Integer, default=1)
     total_price = Column(Integer)  # 以分为单位存储总价
     
@@ -88,3 +88,4 @@ class Order(BaseModel):
             'created_at': self.created_at.isoformat() if self.created_at is not None else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at is not None else None
         }
+

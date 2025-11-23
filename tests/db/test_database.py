@@ -8,8 +8,8 @@ import unittest
 import tempfile
 import os
 from sqlalchemy.orm import Session
-from src.db import DatabaseManager, transactional, with_db_session
-from src.db.example_models import User, Product
+from db import DatabaseManager, transactional, with_db_session
+from db.example_models import User, Product
 
 class TestDatabase(unittest.TestCase):
     """数据库功能测试"""
@@ -63,8 +63,8 @@ class TestDatabase(unittest.TestCase):
             # 先创建用户
             created_user = User.create(db, name="Bob", email="bob@example.com", age=30)
             
-            # 确保ID是整数类型
-            user_id = int(created_user.id)
+            # 获取用户ID
+            user_id = created_user.id
             
             # 再获取用户
             user = User.get_by_id(db, user_id)
@@ -91,8 +91,8 @@ class TestDatabase(unittest.TestCase):
             # 先创建用户
             user = User.create(db, name="Alice", email="alice@example.com", age=25)
             
-            # 确保ID是整数类型
-            user_id = int(user.id)
+            # 获取用户ID
+            user_id = user.id
             
             # 更新用户
             updated_user = User.update(db, user_id, name="Alice Smith", age=26)
@@ -106,8 +106,8 @@ class TestDatabase(unittest.TestCase):
             # 先创建用户
             user = User.create(db, name="Alice", email="alice@example.com", age=25)
             
-            # 确保ID是整数类型
-            user_id = int(user.id)
+            # 获取用户ID
+            user_id = user.id
             
             # 删除用户
             result = User.delete(db, user_id)

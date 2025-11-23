@@ -7,8 +7,8 @@
 import unittest
 import tempfile
 import os
-from src.db import DatabaseManager
-from src.db.example_models import User, Product
+from db import DatabaseManager
+from db.example_models import User, Product
 
 class TestDatabaseSimple(unittest.TestCase):
     """数据库功能简单测试"""
@@ -55,7 +55,7 @@ class TestDatabaseSimple(unittest.TestCase):
             self.assertEqual(user.age, 25)
             
             # 查询用户
-            user_id = int(user.id)
+            user_id = user.id
             queried_user = User.get_by_id(db, user_id)
             self.assertIsNotNone(queried_user)
             self.assertEqual(queried_user.name, "Alice")

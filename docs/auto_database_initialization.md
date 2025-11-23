@@ -13,9 +13,11 @@
 
 ## 配置文件
 
-数据库配置在 [src/db/config.py](file:///E:/GitHub/Hello-Python/src/db/config.py) 中定义：
+数据库配置可以通过环境变量或程序化方式定义：
 
 ```python
+import os
+
 # 数据库配置
 DATABASE_CONFIG = {
     "default": os.getenv("DATABASE_URL", "sqlite:///./app.db"),
@@ -43,7 +45,7 @@ AUTO_CREATE_TABLES = os.getenv("AUTO_CREATE_TABLES", "true").lower() == "true"
 数据库在应用启动时自动初始化，可直接使用：
 
 ```python
-from src.db import transactional, with_db_session
+from db import transactional, with_db_session
 
 @transactional("default")
 def create_user(db: Session, name: str, email: str):
@@ -56,10 +58,10 @@ def list_analytics_users(db: Session):
 
 ### 2. 自定义配置
 
-可以通过修改 [src/db/config.py](file:///E:/GitHub/Hello-Python/src/db/config.py) 文件来自定义数据库配置：
+可以通过程序化方式自定义数据库配置：
 
 ```python
-# src/db/config.py
+# 自定义配置
 DATABASE_CONFIG = {
     "default": "sqlite:///./my_app.db",
     "analytics": "postgresql://user:pass@localhost/analytics",
@@ -78,7 +80,7 @@ export AUTO_CREATE_TABLES=false
 然后在代码中手动调用：
 
 ```python
-from src.db import initialize_databases, DATABASE_CONFIG
+from db import initialize_databases
 
 # 手动初始化
 initialize_databases(DATABASE_CONFIG)
@@ -88,8 +90,8 @@ initialize_databases(DATABASE_CONFIG)
 
 ```python
 # examples/db_auto_init_example.py
-from src.db import transactional, with_db_session
-from src.db.example_models import User
+from db import transactional, with_db_session
+from db.example_models import User
 from sqlalchemy.orm import Session
 
 @transactional("default")
