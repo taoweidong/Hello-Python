@@ -8,14 +8,16 @@ from functools import wraps
 from typing import Callable, Any, Optional
 from sqlalchemy.orm import Session
 from .database import get_db, db_manager
+from loguru import logger
 
-def transactional(db_name: Optional[str] = None):
+def transactional(db_name: Optional[str] = None, auto_commit: bool = True):
     """
     事务处理装饰器
     自动处理数据库事务，包括提交和回滚
     
     Args:
         db_name: 数据库名称，如果为None则使用默认数据库
+        auto_commit: 是否自动提交，默认为True
         
     Returns:
         Callable: 装饰器函数
@@ -29,7 +31,7 @@ def transactional(db_name: Optional[str] = None):
             
             # 查找参数中的数据库会话
             db_session = None
-            for arg in args:
+            for i, arg in enumerate(args):
                 if isinstance(arg, Session):
                     db_session = arg
                     break
@@ -44,13 +46,19 @@ def transactional(db_name: Optional[str] = None):
                 close_session = True
             else:
                 close_session = False
-            
+
             try:
                 result = func(*args, **kwargs)
-                db_session.commit()
+                
+                # 只有在需要自动提交且没有外部提供的会话时才提交
+                if auto_commit and close_session:
+                    db_session.commit()
+                
                 return result
             except Exception as e:
+                # 发生异常时总是回滚
                 db_session.rollback()
+                logger.error(f"Transaction failed in {func.__name__}: {str(e)}")
                 raise e
             finally:
                 if close_session and db_gen:
@@ -88,6 +96,9 @@ def with_db_session(db_name: Optional[str] = None):
                 # 将数据库会话作为第一个参数传递
                 result = func(db_session, *args, **kwargs)
                 return result
+            except Exception as e:
+                logger.error(f"Database session error in {func.__name__}: {str(e)}")
+                raise
             finally:
                 db_session.close()
                 # 关闭生成器
@@ -98,4 +109,3 @@ def with_db_session(db_name: Optional[str] = None):
         
         return wrapper
     return decorator
-

@@ -23,8 +23,13 @@ except ImportError:
     # 如果 threading 不可用，使用简单对象
     class Local:
         def __init__(self):
-            self.db_name = 'default'
+            self._current_db_name = 'default'
     _thread_locals = Local()
+
+class DatabaseConfig:
+    """数据库配置类"""
+    def __init__(self, url: str):
+        self.url = url
 
 class DatabaseManager:
     """数据库管理器类"""
@@ -32,9 +37,9 @@ class DatabaseManager:
     def __init__(self, default_url: Optional[str] = None):
         """初始化数据库管理器"""
         # 存储多个数据库配置
-        self.databases: Dict[str, dict] = {}
-        self.engines: Dict[str, Any] = {}
-        self.sessions: Dict[str, Any] = {}
+        self._databases: Dict[str, DatabaseConfig] = {}
+        self._engines: Dict[str, Any] = {}
+        self._sessions: Dict[str, Any] = {}
         
         # 添加默认数据库配置
         if default_url is None:
@@ -49,15 +54,16 @@ class DatabaseManager:
             name: 数据库名称
             database_url: 数据库URL
         """
-        self.databases[name] = {
-            "url": database_url
-        }
+        if name in self._databases:
+            raise ValueError(f"Database '{name}' already exists")
+        
+        self._databases[name] = DatabaseConfig(database_url)
         # 创建引擎和会话工厂
         engine = create_engine(database_url, echo=False)
         session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         
-        self.engines[name] = engine
-        self.sessions[name] = session_factory
+        self._engines[name] = engine
+        self._sessions[name] = session_factory
     
     def get_current_db_name(self) -> str:
         """
@@ -66,8 +72,8 @@ class DatabaseManager:
         Returns:
             str: 数据库名称
         """
-        if hasattr(_thread_locals, 'db_name'):
-            db_name = _thread_locals.db_name
+        if hasattr(_thread_locals, '_current_db_name'):
+            db_name = getattr(_thread_locals, '_current_db_name', 'default')
             # 确保返回的是字符串
             return str(db_name) if db_name else 'default'
         return 'default'
@@ -79,9 +85,9 @@ class DatabaseManager:
         Args:
             name: 数据库名称
         """
-        if name not in self.databases:
+        if name not in self._databases:
             raise ValueError(f"Database '{name}' not configured")
-        _thread_locals.db_name = name
+        _thread_locals._current_db_name = name
     
     def get_engine(self, name: Optional[str] = None):
         """
@@ -95,7 +101,9 @@ class DatabaseManager:
         """
         if name is None:
             name = self.get_current_db_name()
-        return self.engines[name]
+        if name not in self._engines:
+            raise ValueError(f"Engine for database '{name}' not found")
+        return self._engines[name]
     
     def get_session_factory(self, name: Optional[str] = None):
         """
@@ -109,7 +117,9 @@ class DatabaseManager:
         """
         if name is None:
             name = self.get_current_db_name()
-        return self.sessions[name]
+        if name not in self._sessions:
+            raise ValueError(f"Session factory for database '{name}' not found")
+        return self._sessions[name]
     
     def create_tables(self, db_name: Optional[str] = None):
         """
