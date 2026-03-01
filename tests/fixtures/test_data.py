@@ -3,6 +3,7 @@
 提供测试所需的公共fixtures和工具函数。
 """
 
+import contextlib
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
@@ -52,10 +53,8 @@ Eve,32,Berlin"""
     yield {"file_path": temp_file_path, "data": test_data, "row_count": 5}
 
     # 清理临时文件
-    try:
+    with contextlib.suppress(FileNotFoundError):
         Path(temp_file_path).unlink()
-    except FileNotFoundError:
-        pass
 
 
 @pytest.fixture
@@ -68,10 +67,8 @@ def empty_csv_file() -> Generator[str, None, None]:
     yield temp_file_path
 
     # 清理临时文件
-    try:
+    with contextlib.suppress(FileNotFoundError):
         Path(temp_file_path).unlink()
-    except FileNotFoundError:
-        pass
 
 
 @pytest.fixture
@@ -89,10 +86,8 @@ Charlie,35,Tokyo,extra"""  # 多的列
     yield temp_file_path
 
     # 清理临时文件
-    try:
+    with contextlib.suppress(FileNotFoundError):
         Path(temp_file_path).unlink()
-    except FileNotFoundError:
-        pass
 
 
 @pytest.fixture
@@ -106,7 +101,5 @@ def test_output_dir() -> Generator[Path, None, None]:
     # 清理输出目录
     import shutil
 
-    try:
+    with contextlib.suppress(Exception):
         shutil.rmtree(output_dir)
-    except Exception:
-        pass

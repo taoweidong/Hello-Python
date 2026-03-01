@@ -199,9 +199,11 @@ class TestLoggerManager:
     def test_setup_logger_configuration_error(self):
         """测试日志配置错误"""
         manager = LoggerManager()
-        with patch("src.config.logging.get_config", side_effect=ConfigurationError("Config error")):
-            with pytest.raises(LoggerError):
-                manager.setup_logger()
+        with (
+            patch("src.config.logging.get_config", side_effect=ConfigurationError("Config error")),
+            pytest.raises(LoggerError),
+        ):
+            manager.setup_logger()
 
     def test_get_logger(self):
         """测试获取日志记录器"""

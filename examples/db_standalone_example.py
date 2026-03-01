@@ -76,8 +76,8 @@ def main():
     # 创建用户
     logger.info("1. 创建用户:")
     try:
-        user1_id = create_user("Alice", "alice@example.com")
-        user2_id = create_user("Bob", "bob@example.com")
+        create_user("Alice", "alice@example.com")
+        create_user("Bob", "bob@example.com")
     except Exception as e:
         logger.error(f"创建用户时出错: {e}")
         return

@@ -4,6 +4,7 @@
 测试封装的数据库基本功能
 """
 
+import contextlib
 import os
 import tempfile
 import unittest
@@ -18,9 +19,9 @@ class TestDatabaseInfrastructureSimple(unittest.TestCase):
     def setUp(self):
         """测试前准备"""
         # 创建临时数据库
-        self.temp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
-        self.temp_db.close()
-        self.db_url = f"sqlite:///{self.temp_db.name}"
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+            self.temp_db_path = f.name
+        self.db_url = f"sqlite:///{self.temp_db_path}"
 
         # 创建数据库管理器
         self.db_manager = DatabaseManager(self.db_url)
@@ -33,11 +34,9 @@ class TestDatabaseInfrastructureSimple(unittest.TestCase):
         # 确关闭所有数据库连接
         self.db_manager.get_engine().dispose()
         # 删除临时数据库文件
-        if os.path.exists(self.temp_db.name):
-            try:
-                os.unlink(self.temp_db.name)
-            except PermissionError:
-                pass
+        if os.path.exists(self.temp_db_path):
+            with contextlib.suppress(PermissionError):
+                os.unlink(self.temp_db_path)
 
     def test_database_manager_creation(self):
         """测试数据库管理器创建"""

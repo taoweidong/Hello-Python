@@ -125,7 +125,7 @@ def main():
     # 在默认数据库中创建用户
     logger.info("1. 在默认数据库中创建用户:")
     try:
-        user1_id = create_user_default_db("Alice", "alice@default.com")
+        create_user_default_db("Alice", "alice@default.com")
     except Exception as e:
         logger.error(f"创建用户时出错: {e}")
         return
@@ -135,7 +135,7 @@ def main():
     # 在secondary数据库中创建用户
     logger.info("2. 在secondary数据库中创建用户:")
     try:
-        user2_id = create_user_secondary_db("Bob", "bob@secondary.com")
+        create_user_secondary_db("Bob", "bob@secondary.com")
     except Exception as e:
         logger.error(f"创建用户时出错: {e}")
         return
@@ -145,7 +145,7 @@ def main():
     # 在analytics数据库中创建用户
     logger.info("3. 在analytics数据库中创建用户:")
     try:
-        user3_id = create_user_analytics_db("Charlie", "charlie@analytics.com")
+        create_user_analytics_db("Charlie", "charlie@analytics.com")
     except Exception as e:
         logger.error(f"创建用户时出错: {e}")
         return

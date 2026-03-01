@@ -324,45 +324,6 @@ def initialize_database(config: dict[str, str] | None = None, default_url: str |
 _database_manager: DatabaseManager | None = None
 
 
-def get_database_manager(default_url: str | None = None) -> DatabaseManager:
-    """获取全局数据库管理器实例
-
-    Args:
-        default_url: 默认数据库URL
-
-    Returns:
-        DatabaseManager: 数据库管理器实例
-    """
-    global _database_manager
-    if _database_manager is None:
-        _database_manager = DatabaseManager(default_url)
-    return _database_manager
-
-
-def initialize_database(config: dict[str, str] | None = None, default_url: str | None = None) -> None:
-    """初始化数据库配置
-
-    Args:
-        config: 数据库配置字典，格式为 {name: database_url}
-        default_url: 默认数据库URL
-
-    Raises:
-        DatabaseConfigurationError: 配置错误时
-    """
-    manager = get_database_manager(default_url)
-
-    # 添加额外的数据库配置
-    if config:
-        for name, url in config.items():
-            if name != "default":  # 避免重复添加默认数据库
-                manager.add_database(name, url)
-
-    # 测试所有数据库连接
-    for db_name in manager.databases:
-        if not manager.test_connection(db_name):
-            print(f"数据库连接测试失败: {db_name}")
-
-
 def get_db(db_name: str | None = None) -> Generator[Session, None, None]:
     """
     获取数据库会话依赖

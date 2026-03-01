@@ -15,13 +15,13 @@ Bob,30,London
 Charlie,35,Tokyo"""
 
         # 创建临时文件
-        self.temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".csv")
-        self.temp_file.write(self.test_data)
-        self.temp_file.close()
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".csv") as f:
+            f.write(self.test_data)
+            self.temp_file_path = f.name
 
     def tearDown(self):
         # 清理临时文件
-        os.unlink(self.temp_file.name)
+        os.unlink(self.temp_file_path)
 
     def test_load_data(self):
         """测试数据加载功能"""
@@ -29,7 +29,7 @@ Charlie,35,Tokyo"""
         # 使用临时的数据仓库进行测试
         # 由于DataProcessor的load_and_process_csv方法依赖于数据仓库，
         # 我们直接测试它能正确处理CSV文件
-        processed_data = processor.load_and_process_csv(self.temp_file.name)
+        processed_data = processor.load_and_process_csv(self.temp_file_path)
         self.assertEqual(len(processed_data), 3)
         self.assertTrue(all(hasattr(item, "name") for item in processed_data))
 
@@ -38,7 +38,7 @@ Charlie,35,Tokyo"""
         processor = DataProcessor()
         # 由于DataProcessor的处理逻辑与之前的简单实现不同，
         # 它返回ProcessedData对象列表而不是DataFrame
-        processed_data = processor.load_and_process_csv(self.temp_file.name)
+        processed_data = processor.load_and_process_csv(self.temp_file_path)
 
         # 验证结果
         self.assertTrue(len(processed_data) > 0)

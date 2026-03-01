@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "Hello-Python"
 version = "0.1.0"
 description = "A sample Python project"
+requires-python = ">=3.10"
 authors = [{name = "Taoweidong", email = "taowd@outlook.com"}]
 readme = "README.md"
 license = {text = "MIT"}

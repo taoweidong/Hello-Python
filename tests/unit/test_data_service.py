@@ -10,6 +10,8 @@ import pytest
 # 添加fixtures路径
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "fixtures"))
 
+import contextlib
+
 from src.services.data_service import DataProcessingError, DataProcessor, get_data_processor
 
 # 导入fixtures
@@ -34,10 +36,8 @@ Eve,32,Berlin"""
 
         yield {"file_path": temp_file_path, "data": test_data, "row_count": 5}
 
-        try:
+        with contextlib.suppress(FileNotFoundError):
             Path(temp_file_path).unlink()
-        except FileNotFoundError:
-            pass
 
     @pytest.fixture
     def empty_csv_file():
@@ -47,10 +47,8 @@ Eve,32,Berlin"""
 
         yield temp_file_path
 
-        try:
+        with contextlib.suppress(FileNotFoundError):
             Path(temp_file_path).unlink()
-        except FileNotFoundError:
-            pass
 
     @pytest.fixture
     def malformed_csv_file():
@@ -65,10 +63,8 @@ Charlie,35,Tokyo,extra"""  # 多的列
 
         yield temp_file_path
 
-        try:
+        with contextlib.suppress(FileNotFoundError):
             Path(temp_file_path).unlink()
-        except FileNotFoundError:
-            pass
 
     @pytest.fixture
     def test_output_dir():
@@ -79,10 +75,8 @@ Charlie,35,Tokyo,extra"""  # 多的列
 
         import shutil
 
-        try:
+        with contextlib.suppress(Exception):
             shutil.rmtree(output_dir)
-        except Exception:
-            pass
 
     @pytest.fixture
     def sample_user_data():
@@ -235,7 +229,7 @@ class TestDataProcessor:
                 try:
                     os.chmod(temp_dir, stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC)
                     os.rmdir(temp_dir)
-                except:
+                except OSError:
                     pass
 
     def test_process_data_stream_success(self, processor, sample_user_data):
@@ -299,7 +293,7 @@ class TestDataProcessor:
         processed_df = processor.process_data(single_row_df)
         assert len(processed_df) == 1
         assert processor.processed_count == 1
-        assert processed_df.iloc[0]["processed"] == True
+        assert processed_df.iloc[0]["processed"]
         assert "processed_at" in processed_df.columns
 
     def test_validate_dataframe_edge_cases(self, processor):

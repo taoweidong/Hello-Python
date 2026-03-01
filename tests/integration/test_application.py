@@ -109,7 +109,7 @@ class TestApplicationIntegration:
 
     def test_configuration_based_processing(self, app_components, csv_test_data, test_output_dir):
         """测试基于配置的数据处理"""
-        config = app_components["config"]
+        _ = app_components["config"]  # 验证 config 存在
         data_processor = app_components["data_processor"]
 
         # 使用配置中的数据文件路径

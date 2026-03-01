@@ -383,10 +383,10 @@ def demo_transaction():
     try:
         with db_manager.get_db_session() as db:
             # 创建文章1
-            article1 = Article.create(db, title="事务测试1", content="内容1", author="测试")
+            Article.create(db, title="事务测试1", content="内容1", author="测试")
 
             # 创建文章2
-            article2 = Article.create(db, title="事务测试2", content="内容2", author="测试")
+            Article.create(db, title="事务测试2", content="内容2", author="测试")
 
             # 如果这里出现异常，上面的操作都会回滚
             # raise Exception("模拟错误")

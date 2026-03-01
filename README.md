@@ -56,9 +56,9 @@ python -m pytest tests/ --cov=src --cov-report=html
 ## 格式化与检查
 
 ```bash
-# Ruff 格式化和检查
-ruff check . --fix
-ruff format .
+# Ruff 格式化和检查（需先安装开发依赖：uv pip install -e .[develop]）
+uv run ruff check . --fix
+uv run ruff format .
 
 # 安装 pre-commit 钩子
 pre-commit install

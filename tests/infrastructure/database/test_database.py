@@ -4,6 +4,7 @@
 测试独立的数据库操作库功能
 """
 
+import contextlib
 import os
 import tempfile
 import unittest
@@ -20,9 +21,9 @@ class TestDatabaseInfrastructure(unittest.TestCase):
     def setUp(self):
         """测试前准备"""
         # 创建临时数据库
-        self.temp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
-        self.temp_db.close()
-        self.db_url = f"sqlite:///{self.temp_db.name}"
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+            self.temp_db_path = f.name
+        self.db_url = f"sqlite:///{self.temp_db_path}"
 
         # 创建数据库管理器
         self.db_manager = DatabaseManager(self.db_url)
@@ -39,12 +40,9 @@ class TestDatabaseInfrastructure(unittest.TestCase):
 
         time.sleep(0.1)
         # 删除临时数据库文件
-        if os.path.exists(self.temp_db.name):
-            try:
-                os.unlink(self.temp_db.name)
-            except PermissionError:
-                # 如果删除失败，标记文件在下次重启时删除
-                pass
+        if os.path.exists(self.temp_db_path):
+            with contextlib.suppress(PermissionError):
+                os.unlink(self.temp_db_path)
 
     def test_database_manager_creation(self):
         """测试数据库管理器创建"""
@@ -152,8 +150,7 @@ class TestDatabaseInfrastructure(unittest.TestCase):
         """测试数据库会话异常处理"""
         with self.db_manager.get_db_session() as db:
             # 创建一个用户
-            user = User.create(db, name="Test", email="test@example.com", age=25)
-            user_id = user.id
+            User.create(db, name="Test", email="test@example.com", age=25)
 
         # 测试获取不存在的用户（应该返回None而不是抛出异常）
         with self.db_manager.get_db_session() as db:

@@ -11,4 +11,6 @@ extend-ignore = [
     "B027",
     # Allow boolean positional values in function calls
     "FBT003",
+    # Allow sys.path manipulation before imports (examples/scripts)
+    "E402",
 ]

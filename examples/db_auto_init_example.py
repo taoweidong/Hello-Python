@@ -1,7 +1,9 @@
 # 添加src目录到路径
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
+import contextlib
 import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.infrastructure.database import transactional, with_db_session
 from src.infrastructure.database.database import DatabaseManager
@@ -17,11 +19,8 @@ local_db_manager = DatabaseManager()
 
 # 添加数据库配置
 for name, url in DATABASE_CONFIG.items():
-    try:
+    with contextlib.suppress(Exception):
         local_db_manager.add_database(name, url)
-    except Exception:
-        # 如果数据库已存在，跳过
-        pass
 
 # 确保表已创建
 local_db_manager.create_tables("default")
@@ -83,7 +82,7 @@ def main():
     # 使用数据库功能
     logger.info("1. 在默认数据库中创建用户:")
     try:
-        user1_id = create_user_default("Alice", "alice@default.com")
+        create_user_default("Alice", "alice@default.com")
     except Exception as e:
         logger.error(f"创建用户时出错: {e}")
         return
@@ -93,7 +92,7 @@ def main():
     # 在分析数据库中创建用户
     logger.info("2. 在分析数据库中创建用户:")
     try:
-        user2_id = create_user_analytics("Bob", "bob@analytics.com")
+        create_user_analytics("Bob", "bob@analytics.com")
     except Exception as e:
         logger.error(f"创建用户时出错: {e}")
         return

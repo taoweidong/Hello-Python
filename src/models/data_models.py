@@ -134,7 +134,7 @@ class DataValidator:
             DataValidationResult: 验证结果
         """
         try:
-            user_data = UserData(**data)
+            UserData(**data)
             return DataValidationResult(is_valid=True)
         except ValidationError as e:
             errors = [f"{error['loc'][0]}: {error['msg']}" for error in e.errors()]
@@ -153,7 +153,7 @@ class DataValidator:
             DataValidationResult: 验证结果
         """
         try:
-            processed_data = ProcessedUserData(**data)
+            ProcessedUserData(**data)
             return DataValidationResult(is_valid=True)
         except ValidationError as e:
             errors = [f"{error['loc'][0]}: {error['msg']}" for error in e.errors()]

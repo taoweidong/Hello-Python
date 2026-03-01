@@ -50,7 +50,7 @@ def cli(ctx, env_file: str | None = None):
 def process_csv_cmd(ctx, input_file: str, processing_type: str):
     """处理CSV数据文件"""
     try:
-        app = ctx.obj["app"]
+        ctx.obj["app"]
         logger = ctx.obj["logger"]
 
         logger.info(f"开始处理CSV文件: {input_file}")
@@ -80,7 +80,7 @@ def process_csv_cmd(ctx, input_file: str, processing_type: str):
 def analyze_data_cmd(ctx, input_file: str, analysis_type: str):
     """分析数据"""
     try:
-        app = ctx.obj["app"]
+        ctx.obj["app"]
         logger = ctx.obj["logger"]
 
         logger.info(f"开始数据分析: {input_file}")
@@ -149,7 +149,7 @@ def status_cmd(ctx):
 def reset_cmd(ctx):
     """重置应用计数器"""
     try:
-        app = ctx.obj["app"]
+        ctx.obj["app"]
         logger = ctx.obj["logger"]
 
         processor = get_data_processor()

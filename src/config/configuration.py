@@ -61,10 +61,7 @@ class ConfigurationManager:
         app_env = os.getenv("APP_ENV", "development")
 
         # 根据环境变量确定配置文件
-        if app_env != "development":
-            env_file = f".env.{app_env}"
-        else:
-            env_file = ".env"
+        env_file = f".env.{app_env}" if app_env != "development" else ".env"
 
         # 检查文件是否存在
         if not Path(env_file).exists():

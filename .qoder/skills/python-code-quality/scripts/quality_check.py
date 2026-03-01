@@ -195,7 +195,7 @@ class QualityAssessment:
             self.metrics.style_compliance = max(0, 100 - style_violations * 0.5)  # 每个违规扣0.5分
             style_passed = style_violations <= 10
             print(f"  风合规性: {self.metrics.style_compliance:.1f}% {'✅' if style_passed else '❌'}")
-        except:
+        except Exception:
             self.metrics.style_compliance = 85.0  # 估计值
             print(f"  风合规性: {self.metrics.style_compliance:.1f}%✅")
 

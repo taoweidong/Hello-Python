@@ -3,6 +3,7 @@
 提供事务处理和会话管理的装饰器功能。
 """
 
+import contextlib
 import random
 import time
 from collections.abc import Callable
@@ -70,10 +71,8 @@ def transactional(db_name: str | None = None, auto_commit: bool = True):
                 if close_session and db_gen:
                     db_session.close()
                     # 关闭生成器
-                    try:
+                    with contextlib.suppress(StopIteration):
                         next(db_gen)
-                    except StopIteration:
-                        pass
 
         return wrapper
 
@@ -195,10 +194,8 @@ def with_db_session(db_name: str | None = None):
             finally:
                 db_session.close()
                 # 关闭生成器
-                try:
+                with contextlib.suppress(StopIteration):
                     next(db_gen)
-                except StopIteration:
-                    pass
 
         return wrapper
 

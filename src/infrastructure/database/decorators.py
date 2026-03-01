@@ -9,6 +9,7 @@
 
 # 为确保独立性，移除loguru依赖
 # 使用Python标准库logging作为备用方案
+import contextlib
 import logging
 import random
 import time
@@ -78,10 +79,8 @@ def transactional(db_name: str | None = None, auto_commit: bool = True):
                 if close_session and db_gen:
                     db_session.close()
                     # 关闭生成器
-                    try:
+                    with contextlib.suppress(StopIteration):
                         next(db_gen)
-                    except StopIteration:
-                        pass
 
         return wrapper
 
@@ -135,7 +134,11 @@ def retry_on_db_error(max_retries: int = 3, delay: float = 1.0, backoff_factor: 
                             sleep_time = current_delay
 
                         logger.warning(
-                            f"Database operation failed (attempt {retries}/{max_retries}), retrying in {sleep_time:.2f}s: {str(e)}"
+                            "Database operation failed (attempt %s/%s), retrying in %.2fs: %s",
+                            retries,
+                            max_retries,
+                            sleep_time,
+                            str(e),
                         )
                         time.sleep(sleep_time)
 
@@ -209,10 +212,8 @@ def with_db_session(db_name: str | None = None):
             finally:
                 db_session.close()
                 # 关闭生成器
-                try:
+                with contextlib.suppress(StopIteration):
                     next(db_gen)
-                except StopIteration:
-                    pass
 
         return wrapper
 
