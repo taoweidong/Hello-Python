@@ -60,6 +60,9 @@ python -m pytest tests/ --cov=src --cov-report=html
 uv run ruff check . --fix
 uv run ruff format .
 
+# mypy 类型检查
+uv run mypy src
+
 # 安装 pre-commit 钩子
 pre-commit install
 

@@ -80,8 +80,11 @@ def process_csv_cmd(ctx, input_file: str, processing_type: str):
 def analyze_data_cmd(ctx, input_file: str, analysis_type: str):
     """分析数据"""
     try:
-        ctx.obj["app"]
-        logger = ctx.obj["logger"]
+        obj = ctx.obj or {}
+        logger = obj.get("logger")
+        if not logger:
+            click.echo("错误: 应用未初始化", err=True)
+            sys.exit(1)
 
         logger.info(f"开始数据分析: {input_file}")
         logger.info(f"分析类型: {analysis_type}")
@@ -100,13 +103,14 @@ def analyze_data_cmd(ctx, input_file: str, analysis_type: str):
         # 执行分析
         if analysis_type == "statistical":
             result = analysis_service.perform_statistical_analysis(data_records)
+            stats = result.statistics or {}
             click.echo("统计分析完成:")
-            click.echo(f" 记录数: {result.statistics.get('count', 0)}")
-            click.echo(f" 平值: {result.statistics.get('mean', 0):.2f}")
-            click.echo(f" 标准差: {result.statistics.get('std_dev', 0):.2f}")
+            click.echo(f" 记录数: {stats.get('count', 0)}")
+            click.echo(f" 平值: {stats.get('mean', 0):.2f}")
+            click.echo(f" 标准差: {stats.get('std_dev', 0):.2f}")
         elif analysis_type == "trend":
             result = analysis_service.perform_trend_analysis(data_records)
-            trend_info = result.statistics
+            trend_info = result.statistics or {}
             click.echo("趋势分析完成:")
             click.echo(f" 趋方向: {trend_info.get('trend_direction', 'unknown')}")
             click.echo(f" 相关系数: {trend_info.get('correlation', 0):.3f}")
@@ -123,8 +127,12 @@ def analyze_data_cmd(ctx, input_file: str, analysis_type: str):
 def status_cmd(ctx):
     """显示应用状态"""
     try:
-        app = ctx.obj["app"]
-        logger = ctx.obj["logger"]
+        obj = ctx.obj or {}
+        app = obj.get("app")
+        logger = obj.get("logger")
+        if not app or not logger:
+            click.echo("错误: 应用未初始化", err=True)
+            sys.exit(1)
 
         click.echo("应用状态信息:")
         click.echo(f"  应用名称: {app.settings.APP_NAME}")
@@ -149,8 +157,11 @@ def status_cmd(ctx):
 def reset_cmd(ctx):
     """重置应用计数器"""
     try:
-        ctx.obj["app"]
-        logger = ctx.obj["logger"]
+        obj = ctx.obj or {}
+        logger = obj.get("logger")
+        if not logger:
+            click.echo("错误: 应用未初始化", err=True)
+            sys.exit(1)
 
         processor = get_data_processor()
         processor.reset_counters()

@@ -21,7 +21,7 @@ class AnalysisError(CoreException):
 class AnalysisService:
     """数据分析服务"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._logger = get_logger()
         self._repository = get_data_repository()
         self._validator = get_data_validator()
@@ -60,7 +60,7 @@ class AnalysisService:
             }
 
             # 按分类统计
-            category_stats = {}
+            category_stats: dict[str, list[float]] = {}
             for record in data_records:
                 if record.category not in category_stats:
                     category_stats[record.category] = []
@@ -181,7 +181,7 @@ class AnalysisService:
 class DataProcessingService:
     """数据处理服务"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._logger = get_logger()
         self._repository = get_data_repository()
         self._validator = get_data_validator()

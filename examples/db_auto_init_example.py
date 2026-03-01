@@ -5,8 +5,13 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from loguru import logger
+from sqlalchemy.orm import Session
+
+from src.config.logging_config import setup_logger
 from src.infrastructure.database import transactional, with_db_session
 from src.infrastructure.database.database import DatabaseManager
+from src.infrastructure.database.example_models import User
 
 # 初始化数据库配置
 DATABASE_CONFIG = {
@@ -25,11 +30,6 @@ for name, url in DATABASE_CONFIG.items():
 # 确保表已创建
 local_db_manager.create_tables("default")
 local_db_manager.create_tables("analytics")
-from loguru import logger
-from sqlalchemy.orm import Session
-
-from src.config.logging_config import setup_logger
-from src.infrastructure.database.example_models import User
 
 # 设置日志
 setup_logger()

@@ -5,6 +5,7 @@
 
 import sys
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -106,7 +107,7 @@ class Application:
         except Exception as e:
             raise ApplicationError(f"数据处理过程中发生错误: {e}")
 
-    def get_status(self) -> dict:
+    def get_status(self) -> dict[str, Any]:
         """获取应用程序状态
 
         Returns:

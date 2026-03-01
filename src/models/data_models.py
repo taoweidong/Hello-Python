@@ -4,6 +4,7 @@
 """
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -88,7 +89,7 @@ class ProcessedUserData(UserData):
 class DataValidationResult:
     """数据验证结果"""
 
-    def __init__(self, is_valid: bool, errors: list | None = None) -> None:
+    def __init__(self, is_valid: bool, errors: list[str] | None = None) -> None:
         """初始化验证结果
 
         Args:
@@ -96,7 +97,7 @@ class DataValidationResult:
             errors:错误列表
         """
         self.is_valid: bool = is_valid
-        self.errors: list = errors or []
+        self.errors: list[str] = errors or []
 
     def __bool__(self) -> bool:
         """返回验证结果的布尔值
@@ -124,7 +125,7 @@ class DataValidator:
     """
 
     @staticmethod
-    def validate_user_data(data: dict) -> DataValidationResult:
+    def validate_user_data(data: dict[str, Any]) -> DataValidationResult:
         """验证用户数据
 
         Args:
@@ -143,7 +144,7 @@ class DataValidator:
             return DataValidationResult(is_valid=False, errors=[str(e)])
 
     @staticmethod
-    def validate_processed_data(data: dict) -> DataValidationResult:
+    def validate_processed_data(data: dict[str, Any]) -> DataValidationResult:
         """验证处理后的数据
 
         Args:

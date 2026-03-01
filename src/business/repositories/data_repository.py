@@ -22,7 +22,7 @@ class RepositoryError(CoreException):
 class DataRepository:
     """数据仓库类"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._logger = get_logger()
         self._db_manager = get_database_manager()
 
@@ -53,6 +53,7 @@ class DataRepository:
             data_records = []
             for _, row in df.iterrows():
                 record = DataRecord(
+                    id=None,
                     name=str(row.get("name", "")),
                     value=float(row.get("value", 0)),
                     category=str(row.get("category", "default")),

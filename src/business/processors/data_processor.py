@@ -6,6 +6,7 @@
 import time
 from collections.abc import Callable
 from datetime import datetime
+from typing import Any
 
 from ...core.exceptions import CoreException
 from ...core.logging import get_logger
@@ -22,14 +23,14 @@ class ProcessingError(CoreException):
 class DataProcessor:
     """数据处理器"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._logger = get_logger()
         self._repository = get_data_repository()
         self._validator = get_data_validator()
         self._processed_count = 0
 
     def load_and_process_csv(
-        self, file_path: str, processing_steps: list[Callable] | None = None
+        self, file_path: str, processing_steps: list[Callable[..., Any]] | None = None
     ) -> list[ProcessedData]:
         """加载CSV文件并处理数据
 
@@ -81,7 +82,7 @@ class DataProcessor:
         Returns:
             List[ProcessedData]:处理后的数据列表
         """
-        processed_data = []
+        processed_data: list[ProcessedData] = []
 
         for record in data_records:
             # 验证数据
@@ -127,11 +128,11 @@ class DataProcessor:
 class DataProcessingPipeline:
     """数据处理管道"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._logger = get_logger()
-        self._steps: list[Callable] = []
+        self._steps: list[Callable[..., Any]] = []
 
-    def add_step(self, step: Callable) -> "DataProcessingPipeline":
+    def add_step(self, step: Callable[..., Any]) -> "DataProcessingPipeline":
         """添加处理步骤
 
         Args:

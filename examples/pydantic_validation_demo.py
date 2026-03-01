@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from loguru import logger
 from pydantic import ValidationError
 
+from src.config.settings import settings
 from src.models import ProcessedUserData, UserData
 
 
@@ -69,9 +70,6 @@ def demo_user_data_validation():
 def demo_config_validation():
     """演示配置校验"""
     logger.info("=== 配置校验示例 ===\n")
-
-    # 从环境变量加载配置
-    from src.config.settings import settings
 
     logger.info("当前配置:")
     logger.info(f"  应用名称: {settings.APP_NAME}")

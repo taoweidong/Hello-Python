@@ -104,7 +104,7 @@ class DataValidator:
     """数据验证器"""
 
     @staticmethod
-    def validate_data_record(data: dict) -> ValidationResult:
+    def validate_data_record(data: dict[str, Any]) -> ValidationResult:
         """验证数据记录"""
         try:
             DataRecord(**data)
@@ -116,7 +116,7 @@ class DataValidator:
             return ValidationResult(is_valid=False, errors=[str(e)])
 
     @staticmethod
-    def validate_processed_data(data: dict) -> ValidationResult:
+    def validate_processed_data(data: dict[str, Any]) -> ValidationResult:
         """验证处理后的数据"""
         try:
             ProcessedData(**data)
@@ -128,7 +128,7 @@ class DataValidator:
             return ValidationResult(is_valid=False, errors=[str(e)])
 
     @staticmethod
-    def validate_analysis_result(data: dict) -> ValidationResult:
+    def validate_analysis_result(data: dict[str, Any]) -> ValidationResult:
         """验证分析结果"""
         try:
             AnalysisResult(**data)

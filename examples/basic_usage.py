@@ -3,7 +3,9 @@
 演示如何使用重构后的项目进行基本的数据分析操作。
 """
 
+import csv
 import sys
+import traceback
 from pathlib import Path
 
 # 添加项目根目录到路径
@@ -18,9 +20,6 @@ from src.business.services import get_analysis_service
 
 def create_sample_data():
     """创建示例数据文件"""
-    import csv
-    from pathlib import Path
-
     # 确保数据目录存在
     data_dir = Path("data")
     data_dir.mkdir(exist_ok=True)
@@ -103,8 +102,6 @@ def basic_analysis_example():
 
     except Exception as e:
         print(f"错误: {e}")
-        import traceback
-
         traceback.print_exc()
 
 
