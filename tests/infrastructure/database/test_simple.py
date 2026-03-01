@@ -1,17 +1,17 @@
-# tests/db/test_simple.py
+# tests/infrastructure/database/test_simple.py
 """
-数据库操作库简单测试
+数据库基础设施模块简单测试
 测试封装的数据库基本功能
 """
 
 import unittest
 import tempfile
 import os
-from db import DatabaseManager
-from db.example_models import User, Product
+from src.infrastructure.database import DatabaseManager
+from src.infrastructure.database.example_models import User, Product
 
-class TestDatabaseSimple(unittest.TestCase):
-    """数据库功能简单测试"""
+class TestDatabaseInfrastructureSimple(unittest.TestCase):
+    """数据库基础设施功能简单测试"""
     
     def setUp(self):
         """测试前准备"""
@@ -28,7 +28,7 @@ class TestDatabaseSimple(unittest.TestCase):
     
     def tearDown(self):
         """测试后清理"""
-        # 确保关闭所有数据库连接
+        #确关闭所有数据库连接
         self.db_manager.get_engine().dispose()
         # 删除临时数据库文件
         if os.path.exists(self.temp_db.name):

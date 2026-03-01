@@ -14,7 +14,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from sqlalchemy import Column, String, Integer, DateTime
 from sqlalchemy.orm import Session
-from db import (
+from src.infrastructure.database import (
     BaseModel,
     DatabaseManager,
     db_manager,

@@ -1,7 +1,10 @@
-# db/example_models.py
+# src/infrastructure/database/example_models.py
 """
 示例数据库模型
 演示如何使用数据库操作库
+
+这是独立的基础设施模块示例，可在其他项目中直接使用。
+不依赖任何项目特定代码，确保完全独立性和可复用性。
 """
 
 from sqlalchemy import Column, String, Integer, ForeignKey

@@ -1,18 +1,18 @@
-# tests/db/test_database.py
+# tests/infrastructure/database/test_database.py
 """
-数据库操作库测试
-测试封装的数据库功能
+数据库基础设施模块测试
+测试独立的数据库操作库功能
 """
 
 import unittest
 import tempfile
 import os
 from sqlalchemy.orm import Session
-from db import DatabaseManager, transactional, with_db_session
-from db.example_models import User, Product
+from src.infrastructure.database import DatabaseManager, transactional, with_db_session
+from src.infrastructure.database.example_models import User, Product
 
-class TestDatabase(unittest.TestCase):
-    """数据库功能测试"""
+class TestDatabaseInfrastructure(unittest.TestCase):
+    """数据库基础设施功能测试"""
     
     def setUp(self):
         """测试前准备"""
@@ -29,9 +29,9 @@ class TestDatabase(unittest.TestCase):
     
     def tearDown(self):
         """测试后清理"""
-        # 确保关闭所有数据库连接
+        #确关闭所有数据库连接
         self.db_manager.get_engine().dispose()
-        # 等待一段时间让文件解锁
+        #等待一段时间让文件解锁
         import time
         time.sleep(0.1)
         # 删除临时数据库文件
@@ -60,13 +60,13 @@ class TestDatabase(unittest.TestCase):
     def test_get_user_by_id(self):
         """测试根据ID获取用户"""
         with self.db_manager.get_db_session() as db:
-            # 先创建用户
+            #先创建用户
             created_user = User.create(db, name="Bob", email="bob@example.com", age=30)
             
             # 获取用户ID
             user_id = created_user.id
             
-            # 再获取用户
+            #再获取用户
             user = User.get_by_id(db, user_id)
             self.assertIsNotNone(user)
             self.assertEqual(user.name, "Bob")
@@ -88,7 +88,7 @@ class TestDatabase(unittest.TestCase):
     def test_update_user(self):
         """测试更新用户"""
         with self.db_manager.get_db_session() as db:
-            # 先创建用户
+            #先创建用户
             user = User.create(db, name="Alice", email="alice@example.com", age=25)
             
             # 获取用户ID
@@ -113,7 +113,7 @@ class TestDatabase(unittest.TestCase):
             result = User.delete(db, user_id)
             self.assertTrue(result)
             
-            # 确认用户已删除
+            #确用户已删除
             deleted_user = User.get_by_id(db, user_id)
             self.assertIsNone(deleted_user)
     
@@ -125,12 +125,12 @@ class TestDatabase(unittest.TestCase):
             User.create(db, name="Bob", email="bob@example.com", age=30)
             User.create(db, name="Alice2", email="alice2@example.com", age=28)
             
-            # 过滤用户
+            #过滤用户
             users = User.filter(db, name="Alice")
             self.assertEqual(len(users), 1)
             self.assertEqual(users[0].name, "Alice")
             
-            # 根据年龄过滤
+            #根据年龄过滤
             users = User.filter(db, age=25)
             self.assertEqual(len(users), 1)
             self.assertEqual(users[0].age, 25)

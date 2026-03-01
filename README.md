@@ -25,32 +25,43 @@ Hello-Python/
 │   ├── config/
 │   │   ├── __init__.py
 │   │   ├── settings.py
-│   │   └── logging_config.py
+│   │  └── logging_config.py
 │   ├── data_processor.py
 │   ├── models.py
-│   └── db/
+│  └── infrastructure/
 │       ├── __init__.py
-│       ├── database.py
-│       ├── decorators.py
-│       ├── crud.py
-│       ├── models.py
-│       ├── example_models.py
-│       └── config.py
+│      └── database/
+│           ├── __init__.py
+│           ├── database.py
+│           ├── decorators.py
+│           ├── crud.py
+│           ├── models.py
+│           ├── example_models.py
+│           └── README.md
 ├── tests/
 │   ├── __init__.py
-│   ├── test_config.py
-│   ├── test_logger.py
-│   ├── test_data_processor.py
+│   ├── config/
+│   │   ├── test_settings.py
+│   │  └── test_logging_config.py
+│   ├── infrastructure/
+│   │   ├── __init__.py
+│   │   └── database/
+│   │       ├── __init__.py
+│   │       ├── test_database.py
+│   │       └── test_simple.py
 │   ├── test_cli.py
+│   ├── test_click_demo.py
+│   ├── test_data_processor.py
+│   ├── test_env_config.py
 │   ├── test_pydantic_validation.py
-│   ├── test_database.py
-│   ├── test_db.py
-│   └── test_env_config.py
+│   └── test_runner.py
 ├── examples/
 │   ├── pydantic_validation_demo.py
 │   ├── env_config_demo.py
 │   ├── click_demo_guide.py
-│   └── db_example.py
+│   ├── db_example.py
+│   ├── db_standalone_example.py
+│  └── db_auto_init_example.py
 ├── docs/
 │   ├── multi_database_support.md
 │   └── auto_database_initialization.md

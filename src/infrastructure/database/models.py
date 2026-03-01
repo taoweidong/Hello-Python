@@ -1,6 +1,9 @@
-# db/models.py
+# src/infrastructure/database/models.py
 """
 数据库模型基类
+
+这是独立的基础设施模块，可在其他项目中直接使用。
+不依赖任何项目特定代码，确保完全独立性和可复用性。
 """
 
 from sqlalchemy import Column, String, DateTime

@@ -10,14 +10,17 @@ import os
 # 添加src目录到路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from db import transactional, with_db_session, db_manager
-from db.example_models import User, Product, Order
+from src.infrastructure.database import transactional, with_db_session, db_manager
+from src.infrastructure.database.example_models import User, Product, Order
 from src.config.logging_config import setup_logger
 from loguru import logger
 from sqlalchemy.orm import Session
 
 # 设置日志
 setup_logger()
+
+# 初始化数据库（创建表）
+db_manager.create_tables()
 
 # 原有的装饰器用法（使用默认数据库）
 @transactional()

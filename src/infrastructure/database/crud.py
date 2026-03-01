@@ -1,7 +1,10 @@
-# db/crud.py
+# src/infrastructure/database/crud.py
 """
 CRUD操作混入类
 提供基本的增删改查功能
+
+这是独立的基础设施模块，可在其他项目中直接使用。
+不依赖任何项目特定代码，确保完全独立性和可复用性。
 """
 
 from typing import List, Optional, Dict, Any

@@ -1,0 +1,4 @@
+name,age,city,processed,processed_at
+Alice,25,New York,True,2026-03-01T10:05:05.364406
+Bob,30,London,True,2026-03-01T10:05:05.364406
+Charlie,35,Tokyo,True,2026-03-01T10:05:05.364406

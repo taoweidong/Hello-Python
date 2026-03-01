@@ -1,1 +1,1 @@
-# src/__init__.py
+"""Hello-Python项目根模块"""

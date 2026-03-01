@@ -10,8 +10,8 @@ import os
 # 添加src目录到路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from db import transactional, with_db_session, initialize_databases
-from db.models import BaseModel
+from src.infrastructure.database import transactional, with_db_session, initialize_databases
+from src.infrastructure.database.models import BaseModel
 from sqlalchemy import Column, String, Integer
 from sqlalchemy.orm import Session
 from src.config.logging_config import setup_logger
