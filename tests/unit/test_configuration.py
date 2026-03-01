@@ -63,7 +63,7 @@ class TestConfigurationManager:
         env_content = """APP_NAME=TestApp
 LOG_LEVEL=DEBUG
 DATA_FILE_PATH=test/data.csv
-DATABASE_URL=sqlite:///./test.db
+DATABASE_URL=sqlite:///./sql/test.db
 APP_ENV=test"""
         
         env_file = tmp_path / ".env"
@@ -83,7 +83,7 @@ APP_ENV=test"""
                 assert config.APP_NAME == "TestApp"
                 assert config.LOG_LEVEL == "DEBUG"
                 assert config.DATA_FILE_PATH == "test/data.csv"
-                assert config.DATABASE_URL == "sqlite:///./test.db"
+                assert config.DATABASE_URL == "sqlite:///./sql/test.db"
                 assert config.APP_ENV == "test"
         finally:
             os.chdir(original_cwd)

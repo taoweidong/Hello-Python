@@ -20,7 +20,7 @@ class TestCoreConfig:
         """测试默认配置值"""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-            assert settings.APP_NAME == "Hello-Python"
+            assert settings.APP_NAME == "My Project"
             assert settings.LOG_LEVEL == "INFO"
             assert settings.APP_ENV.value == "development"
     

@@ -41,20 +41,20 @@ class User(BaseModel):
 
 # 数据库配置（在独立项目中，这将是你的项目配置）
 DATABASE_CONFIG = {
-    "default": "sqlite:///./standalone_example.db",
+    "standalone": "sqlite:///./sql/standalone_example.db",
 }
 
 # 初始化数据库
 initialize_databases(config=DATABASE_CONFIG)
 
-@transactional("default")
+@transactional("standalone")
 def create_user(db: Session, name: str, email: str):
     """创建用户"""
     user = User.create(db, name=name, email=email)
     logger.info(f"创建用户: {user}")
     return user.id
 
-@with_db_session("default")
+@with_db_session("standalone")
 def list_users(db: Session):
     """列出所有用户"""
     users = User.get_all(db)

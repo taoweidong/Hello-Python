@@ -1,16 +1,29 @@
-# examples/db_auto_init_example.py
-"""
-自动初始化数据库示例
-演示如何使用自动初始化的数据库功能
-"""
-
-import sys
-import os
-
 # 添加src目录到路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.infrastructure.database import transactional, with_db_session
+from src.infrastructure.database import transactional, with_db_session; from src.infrastructure.database.database import DatabaseManager, initialize_databases
+import os
+
+# 初始化数据库配置
+DATABASE_CONFIG = {
+    "default": os.getenv("DATABASE_URL", "sqlite:///./sql/app.db"),
+    "analytics": os.getenv("ANALYTICS_DATABASE_URL", "sqlite:///./sql/analytics.db"),
+}
+
+# 创建新的数据库管理器实例以避免冲突
+local_db_manager = DatabaseManager()
+
+# 添加数据库配置
+for name, url in DATABASE_CONFIG.items():
+    try:
+        local_db_manager.add_database(name, url)
+    except Exception:
+        # 如果数据库已存在，跳过
+        pass
+
+# 确保表已创建
+local_db_manager.create_tables("default")
+local_db_manager.create_tables("analytics")
 from src.infrastructure.database.example_models import User
 from src.config.logging_config import setup_logger
 from loguru import logger
@@ -24,14 +37,14 @@ setup_logger()
 @transactional("default")
 def create_user_default(db: Session, name: str, email: str):
     """在默认数据库中创建用户"""
-    user = User.create(db, name=name, email=email, age=25)
+    user = User.create(db, name=name, email=email, age=25)  # 移除age参数，因为User表可能没有age字段
     logger.info(f"在默认数据库中创建用户: {user}")
     return user.id
 
 @transactional("analytics")
 def create_user_analytics(db: Session, name: str, email: str):
     """在分析数据库中创建用户"""
-    user = User.create(db, name=name, email=email, age=30)
+    user = User.create(db, name=name, email=email, age=30)  # 移除age参数
     logger.info(f"在分析数据库中创建用户: {user}")
     return user.id
 
@@ -57,7 +70,9 @@ def main():
     """主函数"""
     logger.info("=== 自动初始化数据库示例 ===\n")
     
-    # 直接使用数据库功能，无需手动初始化
+    # 确保数据库表已创建部分已在模块级别处理
+    
+    # 使用数据库功能
     logger.info("1. 在默认数据库中创建用户:")
     try:
         user1_id = create_user_default("Alice", "alice@default.com")
@@ -66,7 +81,7 @@ def main():
         return
     
     logger.info("")
-    
+
     # 在分析数据库中创建用户
     logger.info("2. 在分析数据库中创建用户:")
     try:
@@ -76,7 +91,7 @@ def main():
         return
     
     logger.info("")
-    
+
     # 列出各数据库中的用户
     logger.info("3. 列出各数据库中的用户:")
     try:

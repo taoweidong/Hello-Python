@@ -24,7 +24,7 @@ class EnvironmentConfig(BaseSettings):
     APP_NAME: str = Field(default="Hello-Python", description="应用名称")
     LOG_LEVEL: str = Field(default="INFO", description="日志级别")
     DATA_FILE_PATH: str = Field(default="data/input.csv", description="数据文件路径")
-    DATABASE_URL: str = Field(default="sqlite:///./app.db", description="数据库URL")
+    DATABASE_URL: str = Field(default="sqlite:///./sql/app.db", description="数据库URL")
     APP_ENV: str = Field(default="development", description="应用环境")
 
 

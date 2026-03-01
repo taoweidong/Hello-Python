@@ -23,7 +23,7 @@ class Config(BaseSettings):
     APP_NAME: str = Field(default="Default App", description="应用名称")
     LOG_LEVEL: str = Field(default="INFO", description="日志级别")
     DATA_FILE_PATH: str = Field(default="data/input.csv", description="数据文件路径")
-    DATABASE_URL: str = Field(default="sqlite:///./test.db", description="数据库URL")
+    DATABASE_URL: str = Field(default="sqlite:///./sql/test.db", description="数据库URL")
     APP_ENV: str = Field(default=app_env, description="应用环境")
 
 # 创建配置实例

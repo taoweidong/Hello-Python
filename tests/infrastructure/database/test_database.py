@@ -134,6 +134,48 @@ class TestDatabaseInfrastructure(unittest.TestCase):
             users = User.filter(db, age=25)
             self.assertEqual(len(users), 1)
             self.assertEqual(users[0].age, 25)
+    
+    def test_database_connection_failure(self):
+        """测试数据库连接失败"""
+        # 使用无效的数据库URL
+        invalid_db_manager = DatabaseManager("sqlite:///invalid_path/does_not_exist.db")
+        
+        # 测试连接失败
+        result = invalid_db_manager.test_connection()
+        self.assertFalse(result)
+    
+    def test_database_session_exception_handling(self):
+        """测试数据库会话异常处理"""
+        with self.db_manager.get_db_session() as db:
+            # 创建一个用户
+            user = User.create(db, name="Test", email="test@example.com", age=25)
+            user_id = user.id
+        
+        # 测试获取不存在的用户（应该返回None而不是抛出异常）
+        with self.db_manager.get_db_session() as db:
+            non_existent_user = User.get_by_id(db, 999999)
+            self.assertIsNone(non_existent_user)
+    
+    def test_database_transaction_rollback(self):
+        """测试数据库事务回滚"""
+        # 测试装饰器的事务回滚功能
+        @transactional()
+        def failing_operation(db: Session):
+            # 创建一个用户
+            user = User.create(db, name="WillFail", email="fail@example.com", age=25)
+            # 故意引发异常
+            raise Exception("测试事务回滚")
+            return user
+        
+        # 执行会失败的操作
+        with self.assertRaises(Exception):
+            with self.db_manager.get_db_session() as db:
+                failing_operation(db)
+        
+        # 验证用户没有被创建（事务已回滚）
+        with self.db_manager.get_db_session() as db:
+            users = User.filter(db, name="WillFail")
+            self.assertEqual(len(users), 0)
 
 if __name__ == '__main__':
     unittest.main()

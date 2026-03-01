@@ -292,6 +292,46 @@ class TestDataProcessor:
         processor2 = get_data_processor()
         assert processor1 is processor2
         assert isinstance(processor1, DataProcessor)
+    
+    def test_process_empty_dataframe(self, processor):
+        """测试处理空DataFrame"""
+        empty_df = pd.DataFrame(columns=['name', 'age', 'city'])
+        processed_df = processor.process_data(empty_df)
+        assert len(processed_df) == 0
+        assert processor.processed_count == 0
+    
+    def test_process_single_row_dataframe(self, processor):
+        """测试处理单行DataFrame"""
+        single_row_df = pd.DataFrame({
+            'name': ['Alice'],
+            'age': [25],
+            'city': ['New York']
+        })
+        processed_df = processor.process_data(single_row_df)
+        assert len(processed_df) == 1
+        assert processor.processed_count == 1
+        assert processed_df.iloc[0]['processed'] == True
+        assert 'processed_at' in processed_df.columns
+    
+    def test_validate_dataframe_edge_cases(self, processor):
+        """测试DataFrame验证边界情况"""
+        # 测试包含空字符串的数据
+        df_with_empty = pd.DataFrame({
+            'name': ['Alice', ''],  # 空字符串
+            'age': [25, 30],
+            'city': ['New York', 'London']
+        })
+        with pytest.raises(DataProcessingError):
+            processor._validate_dataframe(df_with_empty)
+        
+        # 测试包含只包含空格的字符串
+        df_with_whitespace = pd.DataFrame({
+            'name': ['Alice', '   '],  # 只包含空格
+            'age': [25, 30],
+            'city': ['New York', 'London']
+        })
+        with pytest.raises(DataProcessingError):
+            processor._validate_dataframe(df_with_whitespace)
 
 
 class TestDataProcessorIntegration:

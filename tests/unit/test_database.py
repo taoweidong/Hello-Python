@@ -43,7 +43,7 @@ class TestDatabaseManager:
     
     def test_init_with_custom_url(self):
         """测试使用自定义URL初始化"""
-        custom_url = "sqlite:///./test.db"
+        custom_url = "sqlite:///./sql/test.db"
         manager = DatabaseManager(custom_url)
         assert manager._databases["default"].url == custom_url
     

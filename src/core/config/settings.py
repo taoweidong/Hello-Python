@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     DATA_SAMPLES_PATH: str = Field(default="data/samples", description="示例数据目录")
     
     # 数据库配置
-    DATABASE_URL: str = Field(default="sqlite:///./app.db", description="数据库URL")
+    DATABASE_URL: str = Field(default="sqlite:///./sql/app.db", description="数据库URL")
     DATABASE_ECHO: bool = Field(default=False, description="是否输出SQL语句")
     
     #其配置
@@ -91,7 +91,7 @@ DATA_OUTPUT_PATH=data/output
 DATA_SAMPLES_PATH=data/samples
 
 # 数据库配置
-DATABASE_URL=sqlite:///./app.db
+DATABASE_URL=sqlite:///./sql/app.db
 DATABASE_ECHO=false
 
 #调试配置

@@ -3,7 +3,7 @@ import unittest
 import pandas as pd
 import os
 import tempfile
-from src.data_processor import load_data, process_data
+from src.business.processors.data_processor import DataProcessor
 
 class TestDataProcessor(unittest.TestCase):
     def setUp(self):
@@ -24,23 +24,24 @@ Charlie,35,Tokyo"""
     
     def test_load_data(self):
         """测试数据加载功能"""
-        df = load_data(self.temp_file.name)
-        self.assertEqual(len(df), 3)
-        self.assertIn('name', df.columns)
-        self.assertIn('age', df.columns)
-        self.assertIn('city', df.columns)
+        processor = DataProcessor()
+        # 使用临时的数据仓库进行测试
+        # 由于DataProcessor的load_and_process_csv方法依赖于数据仓库，
+        # 我们直接测试它能正确处理CSV文件
+        processed_data = processor.load_and_process_csv(self.temp_file.name)
+        self.assertEqual(len(processed_data), 3)
+        self.assertTrue(all(hasattr(item, 'name') for item in processed_data))
     
     def test_process_data(self):
         """测试数据处理功能"""
-        # 创建示例数据
-        df = load_data(self.temp_file.name)
-        
-        # 处理数据
-        result = process_data(df)
+        processor = DataProcessor()
+        # 由于DataProcessor的处理逻辑与之前的简单实现不同，
+        # 它返回ProcessedData对象列表而不是DataFrame
+        processed_data = processor.load_and_process_csv(self.temp_file.name)
         
         # 验证结果
-        self.assertIn('processed', result.columns)
-        self.assertTrue(result['processed'].all())
+        self.assertTrue(len(processed_data) > 0)
+        self.assertTrue(all(hasattr(item, 'processed_value') for item in processed_data))
 
 if __name__ == '__main__':
     unittest.main()

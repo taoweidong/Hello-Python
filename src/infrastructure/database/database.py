@@ -61,7 +61,7 @@ class DatabaseManager:
         
         # 添加默认数据库配置
         if default_url is None:
-            default_url = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+            default_url = os.getenv("DATABASE_URL", "sqlite:///./sql/app.db")
         self.add_database("default", default_url)
     
     def add_database(self, name: str, database_url: str):
