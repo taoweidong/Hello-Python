@@ -9,6 +9,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
+from loguru import logger
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -269,7 +270,7 @@ def initialize_database(
     # 测试所有数据库连接
     for db_name in manager.databases:
         if not manager.test_connection(db_name):
-            print(f"警告: 数据库连接测试失败: {db_name}")
+            logger.warning(f"警告: 数据库连接测试失败: {db_name}")
 
 
 def get_db(db_name: str | None = None) -> Generator[Session, None, None]:

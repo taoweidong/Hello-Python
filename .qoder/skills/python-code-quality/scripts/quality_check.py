@@ -12,6 +12,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from loguru import logger
+
 
 @dataclass
 class QualityMetrics:
@@ -51,10 +53,10 @@ class QualityAssessment:
                 return False, coverage
 
         except FileNotFoundError:
-            print("⚠️ 未安装mypy，跳过类型覆盖率评估")
+            logger.warning("⚠️ 未安装mypy，跳过类型覆盖率评估")
             return True, 70.0  # 估计值
         except Exception as e:
-            print(f"⚠️ 类型覆盖率评估出错：{e}")
+            logger.exception(f"⚠️ 类型覆盖率评估出错：{e}")
             return False, 0.0
 
     def assess_test_coverage(self) -> tuple[bool, float]:
@@ -75,10 +77,10 @@ class QualityAssessment:
                 return False, 0.0
 
         except FileNotFoundError:
-            print("⚠️ 未安装coverage.py，跳过测试覆盖率评估")
+            logger.warning("⚠️ 未安装coverage.py，跳过测试覆盖率评估")
             return True, 60.0  # 估计值
         except Exception as e:
-            print(f"⚠️ 测试覆盖率评估出错：{e}")
+            logger.exception(f"⚠️ 测试覆盖率评估出错：{e}")
             return False, 0.0
 
     def assess_code_complexity(self) -> tuple[bool, float]:
@@ -109,10 +111,10 @@ class QualityAssessment:
                 return False, 0.0
 
         except FileNotFoundError:
-            print("⚠️ 未安装radon，跳过代码复杂度评估")
+            logger.warning("⚠️ 未安装radon，跳过代码复杂度评估")
             return True, 75.0  # 估计值
         except Exception as e:
-            print(f"⚠️ 代码复杂度评估出错：{e}")
+            logger.exception(f"⚠️ 代码复杂度评估出错：{e}")
             return False, 0.0
 
     def assess_security(self) -> tuple[bool, int]:
@@ -137,10 +139,10 @@ class QualityAssessment:
                 return False, 10  # 估计有较多问题
 
         except FileNotFoundError:
-            print("⚠️ 未安装bandit，跳过安全评估")
+            logger.warning("⚠️ 未安装bandit，跳过安全评估")
             return True, 2  # 估计值
         except Exception as e:
-            print(f"⚠️安全评估出错：{e}")
+            logger.exception(f"⚠️安全评估出错：{e}")
             return False, 5  # 估计值
 
     def calculate_maintainability_score(self) -> float:
@@ -170,23 +172,23 @@ class QualityAssessment:
 
     def run_comprehensive_assessment(self) -> QualityMetrics:
         """运行全面的质量评估"""
-        print("🔬 开始全面代码质量评估")
-        print("=" * 60)
+        logger.info("🔬 开始全面代码质量评估")
+        logger.info("=" * 60)
 
         # 评估各项指标
-        print("1. 评估类型注解覆盖率...")
+        logger.info("1. 评估类型注解覆盖率...")
         type_passed, self.metrics.type_coverage = self.assess_type_coverage()
-        print(f"   类型覆盖率: {self.metrics.type_coverage:.1f}% {'✅' if type_passed else '❌'}")
+        logger.info(f"   类型覆盖率: {self.metrics.type_coverage:.1f}% {'✅' if type_passed else '❌'}")
 
-        print("\n2. 评估测试覆盖率...")
+        logger.info("\n2. 评估测试覆盖率...")
         test_passed, self.metrics.test_coverage = self.assess_test_coverage()
-        print(f"   测试覆盖率: {self.metrics.test_coverage:.1f}% {'✅' if test_passed else '❌'}")
+        logger.info(f"   测试覆盖率: {self.metrics.test_coverage:.1f}% {'✅' if test_passed else '❌'}")
 
-        print("\n3. 评估代码复杂度...")
+        logger.info("\n3. 评估代码复杂度...")
         complexity_passed, self.metrics.code_complexity = self.assess_code_complexity()
-        print(f"   代码复杂度: {self.metrics.code_complexity:.1f}% {'✅' if complexity_passed else '❌'}")
+        logger.info(f"   代码复杂度: {self.metrics.code_complexity:.1f}% {'✅' if complexity_passed else '❌'}")
 
-        print("\n4. 评估代码风格合规性...")
+        logger.info("\n4. 评估代码风格合规性...")
         # 使用之前的flake8检查结果
         style_cmd = ["flake8", self.target_path, "--count", "--quiet"]
         try:
@@ -194,26 +196,26 @@ class QualityAssessment:
             style_violations = int(result.stdout.strip()) if result.stdout.strip().isdigit() else 0
             self.metrics.style_compliance = max(0, 100 - style_violations * 0.5)  # 每个违规扣0.5分
             style_passed = style_violations <= 10
-            print(f"  风合规性: {self.metrics.style_compliance:.1f}% {'✅' if style_passed else '❌'}")
+            logger.info(f"  风合规性: {self.metrics.style_compliance:.1f}% {'✅' if style_passed else '❌'}")
         except Exception:
             self.metrics.style_compliance = 85.0  # 估计值
-            print(f"  风合规性: {self.metrics.style_compliance:.1f}%✅")
+            logger.info(f"  风合规性: {self.metrics.style_compliance:.1f}%✅")
 
-        print("\n5. 评估安全问题...")
+        logger.info("\n5. 评估安全问题...")
         security_passed, self.metrics.security_issues = self.assess_security()
-        print(f"  安全问题: {self.metrics.security_issues}个 {'✅' if security_passed else '❌'}")
+        logger.info(f"  安全问题: {self.metrics.security_issues}个 {'✅' if security_passed else '❌'}")
 
         # 计算最终可维护性分数
         self.metrics.maintainability_score = self.calculate_maintainability_score()
 
-        print("\n" + "=" * 60)
-        print("📊综评估结果:")
-        print(f"  🎯 类型注解覆盖率: {self.metrics.type_coverage:.1f}%")
-        print(f"  🧪测试覆盖率: {self.metrics.test_coverage:.1f}%")
-        print(f"   🔄 代码复杂度: {self.metrics.code_complexity:.1f}%")
-        print(f"  📝合规性: {self.metrics.style_compliance:.1f}%")
-        print(f"   🔒 安全问题: {self.metrics.security_issues}个")
-        print(f"  🏆综可维护性分数: {self.metrics.maintainability_score:.1f}/100")
+        logger.info("\n" + "=" * 60)
+        logger.info("📊综评估结果:")
+        logger.info(f"  🎯 类型注解覆盖率: {self.metrics.type_coverage:.1f}%")
+        logger.info(f"  🧪测试覆盖率: {self.metrics.test_coverage:.1f}%")
+        logger.info(f"   🔄 代码复杂度: {self.metrics.code_complexity:.1f}%")
+        logger.info(f"  📝合规性: {self.metrics.style_compliance:.1f}%")
+        logger.info(f"   🔒 安全问题: {self.metrics.security_issues}个")
+        logger.info(f"  🏆综可维护性分数: {self.metrics.maintainability_score:.1f}/100")
 
         # 提供改进建议
         self._provide_recommendations()
@@ -222,33 +224,33 @@ class QualityAssessment:
 
     def _provide_recommendations(self) -> None:
         """提供改进建议"""
-        print("\n💡改进建议:")
+        logger.info("\n💡改进建议:")
 
         if self.metrics.type_coverage < 80:
-            print("   •类型加类型注解，特别是函数参数和返回值")
+            logger.info("   •类型加类型注解，特别是函数参数和返回值")
 
         if self.metrics.test_coverage < 80:
-            print("   •编写更多单元测试，提高测试覆盖率")
+            logger.info("   •编写更多单元测试，提高测试覆盖率")
 
         if self.metrics.code_complexity < 70:
-            print("   •简化复杂函数，考虑拆分大函数")
+            logger.info("   •简化复杂函数，考虑拆分大函数")
 
         if self.metrics.style_compliance < 90:
-            print("   •运行代码格式化工具（black, isort）")
+            logger.info("   •运行代码格式化工具（black, isort）")
 
         if self.metrics.security_issues > 0:
-            print("   • 修复安全问题，使用bandit工具检查")
+            logger.info("   • 修复安全问题，使用bandit工具检查")
 
         # 总体评级
         score = self.metrics.maintainability_score
         if score >= 90:
-            print("\n🏆 代码质量优秀！继续保持！")
+            logger.info("\n🏆 代码质量优秀！继续保持！")
         elif score >= 75:
-            print("\n👍 代码质量良好，有改进空间")
+            logger.info("\n👍 代码质量良好，有改进空间")
         elif score >= 60:
-            print("\n⚠️ 代码质量一般，建议重点改进")
+            logger.warning("\n⚠️ 代码质量一般，建议重点改进")
         else:
-            print("\n❌ 代码质量需要大幅改进")
+            logger.error("\n❌ 代码质量需要大幅改进")
 
 
 def main():
@@ -261,7 +263,7 @@ def main():
 
     # 检查目标路径
     if not Path(args.target).exists():
-        print(f"❌目标路径不存在：{args.target}")
+        logger.error(f"❌目标路径不存在：{args.target}")
         sys.exit(1)
 
     # 运行评估

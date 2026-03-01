@@ -7,21 +7,20 @@
 不依赖任何项目特定代码，确保完全独立性和可复用性。
 """
 
-# 为确保独立性，移除loguru依赖
-# 使用Python标准库logging作为备用方案
+# 使用 loguru 作为统一日志方案
 import contextlib
-import logging
 import random
 import time
 from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from .database import db_manager, get_db
 
-logger = logging.getLogger(__name__)
+logger = logger.bind(module=__name__)
 
 
 def transactional(db_name: str | None = None, auto_commit: bool = True):

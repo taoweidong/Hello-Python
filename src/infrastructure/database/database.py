@@ -7,18 +7,17 @@
 不依赖任何项目特定代码，确保完全独立性和可复用性。
 """
 
-# 为确保独立性，移除loguru依赖
-# 使用Python标准库logging作为备用方案
-import logging
+# 使用 loguru 作为统一日志方案
 import os
 from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
+from loguru import logger
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
-logger = logging.getLogger(__name__)
+logger = logger.bind(module=__name__)
 
 
 # 如果项目使用loguru，可提供配置方法
@@ -317,7 +316,7 @@ def initialize_database(config: dict[str, str] | None = None, default_url: str |
     # 测试所有数据库连接
     for db_name in manager.databases:
         if not manager.test_connection(db_name):
-            print(f"数据库连接测试失败: {db_name}")
+            logger.warning(f"数据库连接测试失败: {db_name}")
 
 
 # 全局数据库管理器实例
@@ -367,5 +366,5 @@ def initialize_databases(config: dict[str, str] | None = None, default_url: str 
         try:
             db_manager.create_tables(db_name)
         except Exception as e:
-            # 为保持独立性，使用print输出警告
-            print(f"警告: 无法为数据库 '{db_name}' 创建表: {e}")
+            # 使用 logger 输出警告，便于上层捕获和配置
+            logger.warning(f"警告: 无法为数据库 '{db_name}' 创建表: {e}")

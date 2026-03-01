@@ -6,27 +6,29 @@ Python代码质量工具安装脚本
 import subprocess
 import sys
 
+from loguru import logger
+
 
 def install_package(package: str, description: str = "") -> bool:
     """安装Python包"""
     try:
-        print(f"📦正在安装 {package} {description}...")
+        logger.info(f"📦正在安装 {package} {description}...")
         result = subprocess.run([sys.executable, "-m", "pip", "install", package], capture_output=True, text=True)
         if result.returncode == 0:
-            print(f"✅ {package}安装成功")
+            logger.success(f"✅ {package}安装成功")
             return True
         else:
-            print(f"❌ {package} 安装失败: {result.stderr}")
+            logger.error(f"❌ {package} 安装失败: {result.stderr}")
             return False
     except Exception as e:
-        print(f"❌安装 {package} 时出错: {e}")
+        logger.exception(f"❌安装 {package} 时出错: {e}")
         return False
 
 
 def main():
     """主安装函数"""
-    print("🔧 Python代码质量工具安装器")
-    print("=" * 50)
+    logger.info("🔧 Python代码质量工具安装器")
+    logger.info("=" * 50)
 
     # 核心必需工具
     core_packages = [
@@ -45,18 +47,18 @@ def main():
         ("unimport", "未使用导入检查工具"),
     ]
 
-    print("1. 安装核心工具...")
+    logger.info("1. 安装核心工具...")
     core_success = 0
     for package, desc in core_packages:
         if install_package(package, f"({desc})"):
             core_success += 1
 
-    print(f"\n✅ 核心工具安装完成 ({core_success}/{len(core_packages)})")
+    logger.info(f"\n✅ 核心工具安装完成 ({core_success}/{len(core_packages)})")
 
     # 询问是否安装可选工具
-    print("\n2.可选高级工具:")
+    logger.info("\n2.可选高级工具:")
     for package, desc in optional_packages:
-        print(f"   - {package}: {desc}")
+        logger.info(f"   - {package}: {desc}")
 
     choice = input("\n是否安装可选工具？(y/N): ").strip().lower()
     if choice in ["y", "yes"]:
@@ -64,17 +66,17 @@ def main():
         for package, desc in optional_packages:
             if install_package(package, f"({desc})"):
                 optional_success += 1
-        print(f"\n✅ 可选工具安装完成 ({optional_success}/{len(optional_packages)})")
+        logger.info(f"\n✅ 可选工具安装完成 ({optional_success}/{len(optional_packages)})")
 
-    print("\n" + "=" * 50)
+    logger.info("\n" + "=" * 50)
     if core_success == len(core_packages):
-        print("🎉所有核心工具安装成功！")
-        print("\n现在可以使用以下命令:")
-        print("  python scripts/type_check.py src/     # 类型检查")
-        print("  python scripts/format_code.py src/    # 代码格式化")
-        print("  python scripts/quality_check.py src/  #综质量评估")
+        logger.success("🎉所有核心工具安装成功！")
+        logger.info("\n现在可以使用以下命令:")
+        logger.info("  python scripts/type_check.py src/     # 类型检查")
+        logger.info("  python scripts/format_code.py src/    # 代码格式化")
+        logger.info("  python scripts/quality_check.py src/  #综质量评估")
     else:
-        print("⚠️ 部分工具安装失败，请手动安装缺失的工具")
+        logger.warning("⚠️ 部分工具安装失败，请手动安装缺失的工具")
 
 
 if __name__ == "__main__":

@@ -5,8 +5,9 @@
 
 import csv
 import sys
-import traceback
 from pathlib import Path
+
+from loguru import logger as loguru_logger
 
 # 添加项目根目录到路径
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -40,39 +41,39 @@ def create_sample_data():
         writer = csv.writer(f)
         writer.writerows(sample_data)
 
-    print(f"示例数据文件已创建: {sample_file}")
+    loguru_logger.info(f"示例数据文件已创建: {sample_file}")
     return str(sample_file)
 
 
 def basic_analysis_example():
     """基本分析示例"""
-    print("===基本数据分析示例 ===\n")
+    loguru_logger.info("===基本数据分析示例 ===\n")
 
     try:
         # 1. 初始化应用
-        print("1. 初始化应用...")
+        loguru_logger.info("1. 初始化应用...")
         app = initialize_app()
-        print(f"   应用: {app.settings.APP_NAME} v{app.settings.APP_VERSION}")
-        print(f"   环境: {app.settings.APP_ENV.value}")
+        loguru_logger.info(f"   应用: {app.settings.APP_NAME} v{app.settings.APP_VERSION}")
+        loguru_logger.info(f"   环境: {app.settings.APP_ENV.value}")
 
         # 2. 创建示例数据
-        print("\n2. 创建示例数据...")
+        loguru_logger.info("\n2. 创建示例数据...")
         sample_file = create_sample_data()
 
         # 3. 数据处理
-        print("\n3.处理数据...")
+        loguru_logger.info("\n3.处理数据...")
         processor = get_data_processor()
 
         processed_data = processor.load_and_process_csv(sample_file)
-        print(f"   成功处理 {len(processed_data)}条记录")
+        loguru_logger.info(f"   成功处理 {len(processed_data)}条记录")
 
         # 显示处理结果
-        print("\n   处理结果预览:")
+        loguru_logger.info("\n   处理结果预览:")
         for i, data in enumerate(processed_data[:3]):  # 显示前3条
-            print(f"   {i + 1}. {data.name}: {data.original_value} -> {data.processed_value:.3f}")
+            loguru_logger.info(f"   {i + 1}. {data.name}: {data.original_value} -> {data.processed_value:.3f}")
 
         # 4. 数据分析
-        print("\n4.执行统计分析...")
+        loguru_logger.info("\n4.执行统计分析...")
         repository = get_data_repository()
         analysis_service = get_analysis_service()
 
@@ -81,28 +82,27 @@ def basic_analysis_example():
 
         # 统计分析
         stats_result = analysis_service.perform_statistical_analysis(data_records)
-        print("  统计分析完成:")
-        print(f"    记录数: {stats_result.statistics.get('count', 0)}")
-        print(f"    平值: {stats_result.statistics.get('mean', 0):.2f}")
-        print(f"     标准差: {stats_result.statistics.get('std_dev', 0):.2f}")
+        loguru_logger.info("  统计分析完成:")
+        loguru_logger.info(f"    记录数: {stats_result.statistics.get('count', 0)}")
+        loguru_logger.info(f"    平值: {stats_result.statistics.get('mean', 0):.2f}")
+        loguru_logger.info(f"     标准差: {stats_result.statistics.get('std_dev', 0):.2f}")
 
         # 趋分析
-        print("\n5. 执行趋势分析...")
+        loguru_logger.info("\n5. 执行趋势分析...")
         trend_result = analysis_service.perform_trend_analysis(data_records)
         trend_info = trend_result.statistics
-        print("  趋分析完成:")
-        print(f"     趋势方向: {trend_info.get('trend_direction', 'unknown')}")
-        print(f"     相关系数: {trend_info.get('correlation', 0):.3f}")
+        loguru_logger.info("  趋分析完成:")
+        loguru_logger.info(f"     趋势方向: {trend_info.get('trend_direction', 'unknown')}")
+        loguru_logger.info(f"     相关系数: {trend_info.get('correlation', 0):.3f}")
 
         # 6.显示状态
-        print("\n6.应用状态:")
-        print(f"  已处理记录数: {processor.processed_count}")
+        loguru_logger.info("\n6.应用状态:")
+        loguru_logger.info(f"  已处理记录数: {processor.processed_count}")
 
-        print("\n=== 示例完成 ===")
+        loguru_logger.info("\n=== 示例完成 ===")
 
-    except Exception as e:
-        print(f"错误: {e}")
-        traceback.print_exc()
+    except Exception:
+        loguru_logger.exception("示例运行出错")
 
 
 if __name__ == "__main__":

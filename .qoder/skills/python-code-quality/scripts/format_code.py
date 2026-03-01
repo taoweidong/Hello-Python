@@ -9,6 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from loguru import logger
+
 
 def run_black_format(target_path: str = ".", check_only: bool = False) -> bool:
     """
@@ -29,29 +31,29 @@ def run_black_format(target_path: str = ".", check_only: bool = False) -> bool:
     cmd.extend(["--line-length", "88", "--target-version", "py39", "--skip-string-normalization", target_path])
 
     try:
-        print(f"⚫正在使用black格式化 {target_path}...")
+        logger.info(f"⚫正在使用black格式化 {target_path}...")
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.getcwd())
 
         if result.returncode == 0:
             if check_only:
-                print("✅ 代码格式符合black标准")
+                logger.success("✅ 代码格式符合black标准")
             else:
-                print("✅ 代码格式化完成")
+                logger.success("✅ 代码格式化完成")
             return True
         else:
             if check_only:
-                print("❌ 代码格式不符合black标准")
-                print(result.stdout)
+                logger.error("❌ 代码格式不符合black标准")
+                logger.error(result.stdout)
             else:
-                print("❌ 代码格式化失败")
-                print(result.stderr)
+                logger.error("❌ 代码格式化失败")
+                logger.error(result.stderr)
             return False
 
     except FileNotFoundError:
-        print("❌ 未找到black，请先安装：pip install black")
+        logger.error("❌ 未找到black，请先安装：pip install black")
         return False
     except Exception as e:
-        print(f"❌ black格式化出错：{e}")
+        logger.exception(f"❌ black格式化出错：{e}")
         return False
 
 
@@ -87,29 +89,29 @@ def run_isort_imports(target_path: str = ".", check_only: bool = False) -> bool:
     )
 
     try:
-        print(f"🔄正在使用isort整理 {target_path} 的导入语句...")
+        logger.info(f"🔄正在使用isort整理 {target_path} 的导入语句...")
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.getcwd())
 
         if result.returncode == 0:
             if check_only:
-                print("✅导入语句整理符合isort标准")
+                logger.success("✅导入语句整理符合isort标准")
             else:
-                print("✅导入语句整理完成")
+                logger.success("✅导入语句整理完成")
             return True
         else:
             if check_only:
-                print("❌导入语句整理不符合isort标准")
-                print(result.stdout)
+                logger.error("❌导入语句整理不符合isort标准")
+                logger.error(result.stdout)
             else:
-                print("❌导入语句整理失败")
-                print(result.stderr)
+                logger.error("❌导入语句整理失败")
+                logger.error(result.stderr)
             return False
 
     except FileNotFoundError:
-        print("❌ 未找到isort，请先安装：pip install isort")
+        logger.error("❌ 未找到isort，请先安装：pip install isort")
         return False
     except Exception as e:
-        print(f"❌isort导入整理出错：{e}")
+        logger.exception(f"❌isort导入整理出错：{e}")
         return False
 
 
@@ -132,26 +134,26 @@ def run_flake8_check(target_path: str = ".") -> tuple[bool, list[str]]:
     ]
 
     try:
-        print(f"📝正在使用flake8检查 {target_path} 的代码风格...")
+        logger.info(f"📝正在使用flake8检查 {target_path} 的代码风格...")
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.getcwd())
 
         if result.returncode == 0:
-            print("✅代码风格符合flake8标准")
+            logger.success("✅代码风格符合flake8标准")
             return True, []
         else:
             errors = result.stdout.strip().split("\n") if result.stdout.strip() else []
-            print("❌发现代码风格问题：")
+            logger.error("❌发现代码风格问题：")
             for error in errors[:10]:  # 只显示前10个错误
-                print(f"  {error}")
+                logger.error(f"  {error}")
             if len(errors) > 10:
-                print(f"  ... 还有 {len(errors) - 10} 个问题")
+                logger.error(f"  ... 还有 {len(errors) - 10} 个问题")
             return False, errors
 
     except FileNotFoundError:
-        print("⚠️  未找到flake8，跳过代码风格检查")
+        logger.warning("⚠️  未找到flake8，跳过代码风格检查")
         return True, []
     except Exception as e:
-        print(f"❌ flake8检查出错：{e}")
+        logger.exception(f"❌ flake8检查出错：{e}")
         return False, [str(e)]
 
 
@@ -172,11 +174,11 @@ def main():
 
     # 检查目标路径是否存在
     if not Path(target_path).exists():
-        print(f"❌目路径不存在：{target_path}")
+        logger.error(f"❌目路径不存在：{target_path}")
         sys.exit(1)
 
-    print("🎨 开始Python代码格式化")
-    print("=" * 50)
+    logger.info("🎨 开始Python代码格式化")
+    logger.info("=" * 50)
 
     success_count = 0
     total_checks = 0
@@ -186,14 +188,14 @@ def main():
         total_checks += 1
         if run_isort_imports(target_path, args.check):
             success_count += 1
-        print()
+        logger.info("")
 
     # 代码格式化
     if not args.skip_format:
         total_checks += 1
         if run_black_format(target_path, args.check):
             success_count += 1
-        print()
+        logger.info("")
 
     # 代码风格检查
     if not args.skip_lint and not args.check:
@@ -201,18 +203,18 @@ def main():
         lint_passed, _ = run_flake8_check(target_path)
         if lint_passed:
             success_count += 1
-        print()
+        logger.info("")
 
-    print("=" * 50)
+    logger.info("=" * 50)
 
     if success_count == total_checks:
         if args.check:
-            print("🎉 所有检查都通过了！代码格式良好")
+            logger.success("🎉 所有检查都通过了！代码格式良好")
         else:
-            print("🎉 代码格式化和检查完成！")
+            logger.success("🎉 代码格式化和检查完成！")
         sys.exit(0)
     else:
-        print(f"🔧 请修复 {total_checks - success_count} 个问题")
+        logger.warning(f"🔧 请修复 {total_checks - success_count} 个问题")
         sys.exit(1)
 
 

@@ -112,10 +112,12 @@ def initialize_app(env_file: str | None = None) -> Application:
 
 if __name__ == "__main__":
     # 简单的应用启动示例
+    from loguru import logger as loguru_logger
+
     try:
         app = initialize_app()
         app.logger.info("应用启动成功！")
-        print(f"欢迎使用 {app.settings.APP_NAME} v{app.settings.APP_VERSION}")
-    except Exception as e:
-        print(f"应用启动失败: {e}")
+        app.logger.info(f"欢迎使用 {app.settings.APP_NAME} v{app.settings.APP_VERSION}")
+    except Exception:
+        loguru_logger.exception("应用启动失败")
         sys.exit(1)

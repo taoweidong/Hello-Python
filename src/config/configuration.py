@@ -3,12 +3,12 @@
 提供统一的配置管理功能，包括环境变量加载、配置验证和类型转换。
 """
 
-import logging
 import os
 from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
+from loguru import logger
 from pydantic import Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -46,7 +46,7 @@ class ConfigurationManager:
         """
         self._config: EnvironmentConfig | None = None
         self._env_file: str | None = env_file
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger.bind(module=__name__)
 
     def _detect_env_file(self) -> str:
         """检测环境配置文件
