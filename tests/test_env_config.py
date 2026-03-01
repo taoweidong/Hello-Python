@@ -1,7 +1,9 @@
 # tests/test_env_config.py
-import unittest
 import os
+import unittest
+
 from src.config.settings import settings
+
 
 class TestEnvConfig(unittest.TestCase):
     def test_config_files_exist(self):
@@ -10,7 +12,7 @@ class TestEnvConfig(unittest.TestCase):
         self.assertTrue(os.path.exists(".env.production"))
         self.assertTrue(os.path.exists(".env.staging"))
         self.assertTrue(os.path.exists(".env.development"))
-        
+
     def test_config_loading(self):
         """测试配置加载"""
         # 检查配置是否正确加载
@@ -20,5 +22,6 @@ class TestEnvConfig(unittest.TestCase):
         self.assertIsNotNone(settings.DATABASE_URL)
         self.assertIsNotNone(settings.APP_ENV)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

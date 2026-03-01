@@ -5,4 +5,4 @@
 
 from .commands import create_cli
 
-__all__ = ['create_cli']
+__all__ = ["create_cli"]

@@ -4,19 +4,19 @@
 """
 
 from .data_models import (
-    UserData,
-    ProcessedUserData,
     DataValidationError,
     DataValidationResult,
     DataValidator,
-    get_data_validator
+    ProcessedUserData,
+    UserData,
+    get_data_validator,
 )
 
 __all__ = [
-    'UserData',
-    'ProcessedUserData',
-    'DataValidationError',
-    'DataValidationResult',
-    'DataValidator',
-    'get_data_validator'
+    "UserData",
+    "ProcessedUserData",
+    "DataValidationError",
+    "DataValidationResult",
+    "DataValidator",
+    "get_data_validator",
 ]

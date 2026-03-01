@@ -1,15 +1,11 @@
 # Ruff configuration
 target-version = "py310"
-select = ["E", "F", "I", "UP", "SIM"]
-
-# Allow fix for all enabled rules
-fixable = ["ALL"]
-unfixable = []
-
-# Set the line length for formatting
 line-length = 120
 
-# Define the exclude patterns
+[lint]
+select = ["E", "F", "I", "UP", "SIM"]
+fixable = ["ALL"]
+unfixable = []
 extend-ignore = [
     # Allow non-abstract empty methods in abstract base classes
     "B027",

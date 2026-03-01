@@ -1,6 +1,8 @@
 # tests/config/test_logging_config.py
 import unittest
+
 from src.config.logging_config import setup_logger
+
 
 class TestLogger(unittest.TestCase):
     def test_logger_setup(self):
@@ -8,5 +10,6 @@ class TestLogger(unittest.TestCase):
         logger = setup_logger()
         self.assertIsNotNone(logger)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
