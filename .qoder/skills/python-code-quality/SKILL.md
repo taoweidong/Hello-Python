@@ -31,37 +31,44 @@ UserData = dict[str, int | str | bool]
 
 # 使用Annotated增强语义
 from typing import Annotated
+
 Email = Annotated[str, "Valid email address"]
+
 
 @dataclass(slots=True, frozen=True)
 class User:
     """不可变的用户数据类，内存效率优化"""
+
     id: int
     name: str
     email: Email
     is_active: bool = True
-    
+
     def __post_init__(self) -> None:
         """数据验证"""
         if "@" not in self.email:
             raise ValueError("Invalid email format")
 
+
 # 使用Protocol定义轻量级接口
 class UserRepository(Protocol):
     """用户仓储接口 - 结构化类型"""
+
     def get_by_id(self, user_id: int) -> User | None: ...
     def save(self, user: User) -> None: ...
+
 
 # 依赖注入实现
 class UserService:
     """高层服务类 - 依赖倒置原则"""
+
     def __init__(self, repository: UserRepository) -> None:
         self.repo = repository
-    
+
     def get_user(self, user_id: int) -> User | None:
         """获取用户信息 -单一职责"""
         return self.repo.get_by_id(user_id)
-    
+
     def create_user(self, user_data: UserData) -> User:
         """创建新用户"""
         user = User(**user_data)  # type: ignore
@@ -78,86 +85,80 @@ from dataclasses import dataclass
 from typing import Protocol
 from datetime import datetime
 
+
 # ---领模型 (Domain Model) ---
 @dataclass(slots=True, frozen=True)
 class PaymentRequest:
     """不可变的支付请求数据"""
+
     amount: float
     currency: str = "USD"
     timestamp: datetime | None = None
 
+
 @dataclass(slots=True, frozen=True)
 class PaymentResult:
     """不可变的支付结果数据"""
+
     success: bool
     transaction_id: str
     message: str = ""
 
+
 # ---接口定义 (使用Protocol) ---
 class PaymentProcessor(Protocol):
     """支付处理器接口 -接口隔离原则"""
+
     def process(self, request: PaymentRequest) -> PaymentResult: ...
     def refund(self, transaction_id: str) -> PaymentResult: ...
+
 
 # ---具实现实现 (里氏替换原则) ---
 class CreditCardProcessor:
     """信用卡支付处理器"""
+
     def __init__(self, api_key: str) -> None:
         self.api_key = api_key
-    
+
     def process(self, request: PaymentRequest) -> PaymentResult:
         # 信用卡支付逻辑
         return PaymentResult(
-            success=True,
-            transaction_id=f"cc_{hash(request)}",
-            message="Credit card payment processed"
+            success=True, transaction_id=f"cc_{hash(request)}", message="Credit card payment processed"
         )
-    
+
     def refund(self, transaction_id: str) -> PaymentResult:
         # 信用卡退款逻辑
-        return PaymentResult(
-            success=True,
-            transaction_id=transaction_id,
-            message="Credit card refund processed"
-        )
+        return PaymentResult(success=True, transaction_id=transaction_id, message="Credit card refund processed")
+
 
 class PayPalProcessor:
     """PayPal支付处理器 -可替换实现"""
+
     def process(self, request: PaymentRequest) -> PaymentResult:
         # PayPal支付逻辑
-        return PaymentResult(
-            success=True,
-            transaction_id=f"pp_{hash(request)}",
-            message="PayPal payment processed"
-        )
-    
+        return PaymentResult(success=True, transaction_id=f"pp_{hash(request)}", message="PayPal payment processed")
+
     def refund(self, transaction_id: str) -> PaymentResult:
-        return PaymentResult(
-            success=True,
-            transaction_id=transaction_id,
-            message="PayPal refund processed"
-        )
+        return PaymentResult(success=True, transaction_id=transaction_id, message="PayPal refund processed")
+
 
 # ---模式 (开闭原则) ---
 class PaymentContext:
     """支付上下文 -高层模块不依赖具体实现"""
+
     def __init__(self, processor: PaymentProcessor) -> None:
         self.processor = processor
-    
+
     def execute_payment(self, amount: float, currency: str = "USD") -> PaymentResult:
         """执行支付 - 使用match-case处理结果 (Python 3.10+)"""
         request = PaymentRequest(amount=amount, currency=currency)
         result = self.processor.process(request)
-        
+
         match result.success:
             case True:
                 return result
             case False:
-                return PaymentResult(
-                    success=False,
-                    transaction_id="",
-                    message=f"Payment failed: {result.message}"
-                )
+                return PaymentResult(success=False, transaction_id="", message=f"Payment failed: {result.message}")
 ```
 
 ##📋现类型注解规范
@@ -169,20 +170,26 @@ from __future__ import annotations
 from typing import Annotated, TypeVar, Generic, Protocol
 from datetime import datetime
 
-#现联合类型语法 (推荐)
+
+# 现联合类型语法 (推荐)
 def calculate_total(items: list[float]) -> float:
     return sum(items)
+
 
 def find_user(users: dict[int, str], user_id: int) -> str | None:
     return users.get(user_id)
 
+
 def process_data(data: str | int) -> str:
     return str(data)
 
+
 # 使用Annotated增强语义
 from typing import Annotated
+
 Email = Annotated[str, "Valid email address"]
 UserId = Annotated[int, "Positive user identifier"]
+
 
 @dataclass
 class UserData:
@@ -190,26 +197,30 @@ class UserData:
     email: Email
     created_at: datetime
 
-#泛使用 (现代语法)
-T = TypeVar('T')
+
+# 泛使用 (现代语法)
+T = TypeVar("T")
+
 
 @dataclass(slots=True)
 class Container(Generic[T]):
     value: T
-    
+
     def get_value(self) -> T:
         return self.value
+
 
 # Protocol定义接口 (结构化类型)
 class DataProcessor(Protocol):
     def process(self, data: list[float]) -> float: ...
     def validate(self, data: list[float]) -> bool: ...
 
+
 # 使用示例
 class AverageProcessor:
     def process(self, data: list[float]) -> float:
         return sum(data) / len(data) if data else 0.0
-    
+
     def validate(self, data: list[float]) -> bool:
         return all(isinstance(x, (int, float)) for x in data)
 ```
@@ -223,26 +234,30 @@ from enum import Enum
 # Literal类型限制
 Status = Literal["pending", "processing", "completed", "failed"]
 
+
 # Final常量
 class Config:
     API_VERSION: Final[str] = "1.0.0"
     MAX_RETRIES: Final[int] = 3
 
+
 # Never类型 (表示函数永不返回)
 def raise_error(message: str) -> Never:
     raise RuntimeError(message)
+
 
 # Self类型 (方法返回自身类型)
 class FluentBuilder:
     def __init__(self) -> None:
         self._data: dict[str, any] = {}
-    
+
     def add_field(self, key: str, value: any) -> Self:
         self._data[key] = value
         return self
-    
+
     def build(self) -> dict[str, any]:
         return self._data.copy()
+
 
 # 使用示例
 builder = FluentBuilder().add_field("name", "John").add_field("age", 30)
