@@ -3,6 +3,8 @@
 负责检测运行环境并提供环境相关的配置功能。
 """
 
+from __future__ import annotations
+
 import os
 from enum import Enum
 

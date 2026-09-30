@@ -3,6 +3,8 @@
 提供数据库连接管理、会话管理和多数据库支持功能。
 """
 
+from __future__ import annotations
+
 import os
 import threading
 from collections.abc import Generator
@@ -10,10 +12,11 @@ from contextlib import contextmanager
 from typing import Any
 
 from loguru import logger
-from sqlalchemy import create_engine
+from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from ..exceptions import ConfigurationError, DatabaseError
+from ..utils import mask_database_url
 from .base import Base
 
 
@@ -36,8 +39,8 @@ class DatabaseManager:
             echo:是否输出SQL语句
         """
         self._databases: dict[str, DatabaseConfig] = {}
-        self._engines: dict[str, Any] = {}
-        self._sessions: dict[str, Any] = {}
+        self._engines: dict[str, Engine] = {}
+        self._sessions: dict[str, sessionmaker[Session]] = {}
         self._echo = echo
 
         # 线程本地存储
@@ -45,7 +48,7 @@ class DatabaseManager:
 
         # 添加默认数据库配置
         if default_url is None:
-            default_url = os.getenv("DATABASE_URL", "sqlite:///./sql/app.db")
+            default_url = os.getenv("DATABASE_URL", "sqlite:///./data/app.db")
         self.add_database("default", default_url, echo)
 
     def add_database(self, name: str, database_url: str, echo: bool | None = None) -> None:
@@ -65,8 +68,8 @@ class DatabaseManager:
         echo_flag = echo if echo is not None else self._echo
         self._databases[name] = DatabaseConfig(database_url, echo_flag)
 
-        # 创建引擎和会话工厂
-        engine = create_engine(database_url, echo=echo_flag)
+        # pool_pre_ping：取连接前探活，避免使用已被服务端断开的连接
+        engine = create_engine(database_url, echo=echo_flag, pool_pre_ping=True)
         session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
         self._engines[name] = engine
@@ -93,7 +96,7 @@ class DatabaseManager:
             raise ConfigurationError(f"数据库 '{name}' 未配置")
         self._thread_locals._current_db_name = name
 
-    def get_engine(self, name: str | None = None):
+    def get_engine(self, name: str | None = None) -> Engine:
         """获取数据库引擎
 
         Args:
@@ -111,7 +114,7 @@ class DatabaseManager:
             raise DatabaseError(f"数据库 '{name}' 的引擎未找到")
         return self._engines[name]
 
-    def get_session_factory(self, name: str | None = None):
+    def get_session_factory(self, name: str | None = None) -> sessionmaker[Session]:
         """获取会话工厂
 
         Args:
@@ -194,7 +197,9 @@ class DatabaseManager:
 
                 connection.execute(text("SELECT 1"))
             return True
-        except Exception:
+        except Exception as e:
+            # 连接失败必须留下线索，不能静默返回 False
+            logger.debug(f"数据库 [{db_name or self.get_current_db_name()}] 连接测试失败: {e}")
             return False
 
     def get_database_info(self, db_name: str | None = None) -> dict[str, Any]:
@@ -211,7 +216,8 @@ class DatabaseManager:
 
         return {
             "name": db_name,
-            "url": self._databases.get(db_name, DatabaseConfig("")).url,
+            # 输出前脱敏，避免密码进入日志/界面
+            "url": mask_database_url(self._databases.get(db_name, DatabaseConfig("")).url),
             "echo": self._databases.get(db_name, DatabaseConfig("")).echo,
             "connected": self.test_connection(db_name),
         }

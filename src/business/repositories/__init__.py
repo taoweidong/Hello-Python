@@ -1,8 +1,11 @@
 """数据访问仓库模块
 
-提供数据访问的抽象层，处理数据的持久化和查询。
+提供数据访问的抽象层：DataRepositoryProtocol 定义仓储接口，
+DataRepository 是基于 SQLAlchemy 的默认实现。
 """
 
-from .data_repository import DataRepository, get_data_repository
+from __future__ import annotations
 
-__all__ = ["DataRepository", "get_data_repository"]
+from .data_repository import DataRepository, DataRepositoryProtocol, RepositoryError, get_data_repository
+
+__all__ = ["DataRepository", "DataRepositoryProtocol", "RepositoryError", "get_data_repository"]

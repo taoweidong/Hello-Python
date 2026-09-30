@@ -4,6 +4,8 @@
 设计为与具体日志实现解耦，便于替换和扩展。
 """
 
+from __future__ import annotations
+
 from .logger import Logger, get_logger, setup_logger
 
 __all__ = ["Logger", "get_logger", "setup_logger"]

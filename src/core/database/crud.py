@@ -3,10 +3,14 @@
 提供基本的增删改查功能，所有模型都可以继承使用。
 """
 
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Any
+from typing import Any, TypeVar
 
 from sqlalchemy.orm import Session
+
+T = TypeVar("T", bound="CRUDMixin")
 
 
 class CRUDMixin:
@@ -15,7 +19,7 @@ class CRUDMixin:
     __abstract__ = True
 
     @classmethod
-    def create(cls, db: Session, **kwargs):
+    def create(cls: type[T], db: Session, **kwargs: Any) -> T:
         """创建新记录
 
         Args:
@@ -31,7 +35,7 @@ class CRUDMixin:
         return instance
 
     @classmethod
-    def get_by_id(cls, db: Session, id: str):
+    def get_by_id(cls: type[T], db: Session, id: str) -> T | None:
         """根据ID获取记录
 
         Args:
@@ -41,10 +45,10 @@ class CRUDMixin:
         Returns:
            模型实例或None
         """
-        return db.query(cls).filter(cls.id == id).first()  # type: ignore
+        return db.query(cls).filter(cls.id == id).first()  # type: ignore[attr-defined]
 
     @classmethod
-    def get_all(cls, db: Session, skip: int = 0, limit: int = 100, order_by=None):
+    def get_all(cls: type[T], db: Session, skip: int = 0, limit: int = 100, order_by: Any = None) -> list[T]:
         """获取所有记录
 
         Args:
@@ -62,7 +66,7 @@ class CRUDMixin:
         return query.offset(skip).limit(limit).all()
 
     @classmethod
-    def update(cls, db: Session, id: str, **kwargs):
+    def update(cls: type[T], db: Session, id: str, **kwargs: Any) -> T | None:
         """更新记录
 
         Args:
@@ -85,7 +89,7 @@ class CRUDMixin:
         return instance
 
     @classmethod
-    def delete(cls, db: Session, id: str) -> bool:
+    def delete(cls: type[T], db: Session, id: str) -> bool:
         """删除记录
 
         Args:
@@ -103,7 +107,7 @@ class CRUDMixin:
         return False
 
     @classmethod
-    def bulk_create(cls, db: Session, objects: list[dict[str, Any]]) -> list:
+    def bulk_create(cls: type[T], db: Session, objects: list[dict[str, Any]]) -> list[T]:
         """批量创建记录
 
         Args:
@@ -119,7 +123,7 @@ class CRUDMixin:
         return instances
 
     @classmethod
-    def bulk_update(cls, db: Session, updates: list[dict[str, Any]], id_field: str = "id") -> int:
+    def bulk_update(cls: type[T], db: Session, updates: list[dict[str, Any]], id_field: str = "id") -> int:
         """批量更新记录
 
         Args:
@@ -140,7 +144,7 @@ class CRUDMixin:
         return updated_count
 
     @classmethod
-    def exists(cls, db: Session, **kwargs) -> bool:
+    def exists(cls: type[T], db: Session, **kwargs: Any) -> bool:
         """检查记录是否存在
 
         Args:
@@ -157,7 +161,7 @@ class CRUDMixin:
         return db.query(query.exists()).scalar()
 
     @classmethod
-    def filter(cls, db: Session, order_by=None, **kwargs):
+    def filter(cls: type[T], db: Session, order_by: Any = None, **kwargs: Any) -> list[T]:
         """根据条件过滤记录
 
         Args:
@@ -179,7 +183,9 @@ class CRUDMixin:
         return query.all()
 
     @classmethod
-    def filter_by_range(cls, db: Session, field_name: str, min_value=None, max_value=None, **kwargs):
+    def filter_by_range(
+        cls: type[T], db: Session, field_name: str, min_value: Any = None, max_value: Any = None, **kwargs: Any
+    ) -> list[T]:
         """根据范围条件过滤记录
 
         Args:
@@ -215,7 +221,7 @@ class CRUDMixin:
         return query.all()
 
     @classmethod
-    def count(cls, db: Session, **kwargs) -> int:
+    def count(cls: type[T], db: Session, **kwargs: Any) -> int:
         """统计符合条件的记录数量
 
         Args:

@@ -4,4 +4,6 @@
 这些模块设计为完全独立，可在其他项目中直接复用。
 """
 
+from __future__ import annotations
+
 __version__ = "1.0.0"

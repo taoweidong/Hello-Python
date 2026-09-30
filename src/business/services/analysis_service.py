@@ -1,30 +1,42 @@
 """核心分析服务
 
 提供数据分析和处理的核心业务逻辑。
+依赖通过构造函数注入（默认使用全局工厂），便于测试时替换实现。
 """
+
+from __future__ import annotations
 
 import statistics
 import time
+from collections.abc import Callable
 
 from ...core.exceptions import CoreException
 from ...core.logging import get_logger
-from ..models import AnalysisResult, DataRecord, ProcessedData, get_data_validator
-from ..repositories import get_data_repository
+from ..models import AnalysisResult, DataRecord, DataValidator, ProcessedData, get_data_validator
+from ..processors.strategies import PROCESSING_STRATEGIES
+from ..repositories import DataRepositoryProtocol, get_data_repository
 
 
 class AnalysisError(CoreException):
     """分析错误异常"""
 
-    pass
-
 
 class AnalysisService:
     """数据分析服务"""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        repository: DataRepositoryProtocol | None = None,
+        validator: DataValidator | None = None,
+    ) -> None:
+        """
+        Args:
+            repository:数据仓库，默认使用全局实例；测试时可注入内存实现
+            validator:数据验证器，默认使用全局实例
+        """
         self._logger = get_logger()
-        self._repository = get_data_repository()
-        self._validator = get_data_validator()
+        self._repository = repository or get_data_repository()
+        self._validator = validator or get_data_validator()
 
     def perform_statistical_analysis(self, data_records: list[DataRecord]) -> AnalysisResult:
         """执行统计分析
@@ -38,14 +50,14 @@ class AnalysisService:
         Raises:
             AnalysisError:分析失败时
         """
+        if not data_records:
+            self._logger.warning("统计分析收到空数据")
+            raise AnalysisError("数据记录为空，无法进行分析")
+
         start_time = time.time()
+        self._logger.info(f"开始统计分析，数据记录数: {len(data_records)}")
 
         try:
-            self._logger.info(f"开始统计分析，数据记录数: {len(data_records)}")
-
-            if not data_records:
-                raise AnalysisError("数据记录为空，无法进行分析")
-
             # 提取数值数据
             values = [record.value for record in data_records]
 
@@ -62,21 +74,19 @@ class AnalysisService:
             # 按分类统计
             category_stats: dict[str, list[float]] = {}
             for record in data_records:
-                if record.category not in category_stats:
-                    category_stats[record.category] = []
-                category_stats[record.category].append(record.value)
+                category_stats.setdefault(record.category, []).append(record.value)
 
             # 计算各类别统计
-            category_summary = {}
-            for category, cat_values in category_stats.items():
-                category_summary[category] = {
+            category_summary = {
+                category: {
                     "count": len(cat_values),
                     "mean": statistics.mean(cat_values),
                     "min": min(cat_values),
                     "max": max(cat_values),
                 }
+                for category, cat_values in category_stats.items()
+            }
 
-            # 创建分析结果
             result = AnalysisResult(
                 id=f"analysis_{int(time.time())}",
                 analysis_type="statistical",
@@ -92,9 +102,11 @@ class AnalysisService:
             self._logger.info(f"统计分析完成，耗时: {result.duration:.2f}秒")
             return result
 
+        except AnalysisError:
+            raise
         except Exception as e:
-            self._logger.error(f"统计分析失败: {e}")
-            raise AnalysisError(f"统计分析失败: {e}")
+            self._logger.exception("统计分析失败")
+            raise AnalysisError("统计分析失败") from e
 
     def perform_trend_analysis(self, data_records: list[DataRecord]) -> AnalysisResult:
         """执行趋势分析
@@ -108,17 +120,17 @@ class AnalysisService:
         Raises:
             AnalysisError:分析失败时
         """
+        if not data_records:
+            self._logger.warning("趋势分析收到空数据")
+            raise AnalysisError("数据记录为空，无法进行分析")
+
+        if len(data_records) < 2:
+            raise AnalysisError("数据记录不足，无法进行趋势分析")
+
         start_time = time.time()
+        self._logger.info(f"开始趋势分析，数据记录数: {len(data_records)}")
 
         try:
-            self._logger.info(f"开始趋势分析，数据记录数: {len(data_records)}")
-
-            if not data_records:
-                raise AnalysisError("数据记录为空，无法进行分析")
-
-            if len(data_records) < 2:
-                raise AnalysisError("数据记录不足，无法进行趋势分析")
-
             # 按时间排序
             sorted_records = sorted(data_records, key=lambda x: x.timestamp)
 
@@ -134,9 +146,8 @@ class AnalysisService:
             sum_xx = sum(x * x for x in timestamps)
 
             # 计算斜率和截距
-            slope = (
-                (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x) if (n * sum_xx - sum_x * sum_x) != 0 else 0
-            )
+            denominator_xx = n * sum_xx - sum_x * sum_x
+            slope = (n * sum_xy - sum_x * sum_y) / denominator_xx if denominator_xx != 0 else 0
             intercept = (sum_y - slope * sum_x) / n
 
             # 计算相关系数
@@ -173,18 +184,29 @@ class AnalysisService:
             self._logger.info(f"趋势分析完成，趋势方向: {trend_result['trend_direction']}")
             return result
 
+        except AnalysisError:
+            raise
         except Exception as e:
-            self._logger.error(f"趋势分析失败: {e}")
-            raise AnalysisError(f"趋势分析失败: {e}")
+            self._logger.exception("趋势分析失败")
+            raise AnalysisError("趋势分析失败") from e
 
 
 class DataProcessingService:
     """数据处理服务"""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        repository: DataRepositoryProtocol | None = None,
+        validator: DataValidator | None = None,
+    ) -> None:
+        """
+        Args:
+            repository:数据仓库，默认使用全局实例；测试时可注入内存实现
+            validator:数据验证器，默认使用全局实例
+        """
         self._logger = get_logger()
-        self._repository = get_data_repository()
-        self._validator = get_data_validator()
+        self._repository = repository or get_data_repository()
+        self._validator = validator or get_data_validator()
 
     def process_data_records(
         self, data_records: list[DataRecord], processing_type: str = "normalization"
@@ -193,31 +215,34 @@ class DataProcessingService:
 
         Args:
             data_records:原始数据记录列表
-            processing_type:处理类型
+            processing_type:处理类型，见 strategies.PROCESSING_STRATEGIES
 
         Returns:
             List[ProcessedData]:处理后的数据列表
 
         Raises:
-            AnalysisError:处理失败时
+            AnalysisError:处理失败或处理类型不支持时
         """
+        strategy: Callable[[list[float]], list[float]] | None = PROCESSING_STRATEGIES.get(processing_type)
+        if strategy is None:
+            raise AnalysisError(f"不支持的处理类型: {processing_type}，可选: {', '.join(PROCESSING_STRATEGIES)}")
+
+        self._logger.info(f"开始数据处理，记录数: {len(data_records)}, 处理类型: {processing_type}")
+
         try:
-            self._logger.info(f"开始数据处理，记录数: {len(data_records)},处理类型: {processing_type}")
-
-            processed_data_list = []
-
+            # 逐条验证，无效记录跳过并告警
+            valid_records: list[DataRecord] = []
             for record in data_records:
-                # 验证数据
                 validation_result = self._validator.validate_data_record(record.model_dump())
                 if not validation_result:
-                    self._logger.warning(f"数据验证失败: {', '.join(validation_result.errors)}")
+                    self._logger.warning(f"数据验证失败，已跳过: {', '.join(validation_result.errors)}")
                     continue
+                valid_records.append(record)
 
-                # 根据处理类型进行处理
-                processed_value = self._apply_processing(record.value, processing_type)
+            processed_values = strategy([record.value for record in valid_records])
 
-                # 创建处理后的数据
-                processed_data = ProcessedData(
+            processed_data_list = [
+                ProcessedData(
                     id=f"processed_{record.id or int(time.time())}",
                     original_id=record.id or str(int(time.time())),
                     name=record.name,
@@ -227,43 +252,20 @@ class DataProcessingService:
                     processing_type=processing_type,
                     metadata={"processing_method": processing_type, "original_status": record.status.value},
                 )
+                for record, processed_value in zip(valid_records, processed_values)
+            ]
 
-                processed_data_list.append(processed_data)
-
-            # 批保存处理后的数据
+            # 批量保存处理后的数据
             self._repository.save_processed_data_batch(processed_data_list)
 
-            self._logger.info(f"数据处理完成，成功处理 {len(processed_data_list)}条")
+            self._logger.info(f"数据处理完成，成功处理 {len(processed_data_list)} 条")
             return processed_data_list
 
+        except AnalysisError:
+            raise
         except Exception as e:
-            self._logger.error(f"数据处理失败: {e}")
-            raise AnalysisError(f"数据处理失败: {e}")
-
-    def _apply_processing(self, value: float, processing_type: str) -> float:
-        """应用数据处理
-
-        Args:
-            value:原始值
-            processing_type:处理类型
-
-        Returns:
-            float:处理后的值
-        """
-        if processing_type == "normalization":
-            # 简单归一化处理（这里使用固定范围作为示例）
-            return value / 100.0 if value != 0 else 0
-        elif processing_type == "standardization":
-            # 标准化处理（示例）
-            return (value - 50) / 10.0 if value != 0 else 0
-        elif processing_type == "log_transformation":
-            # 对数变换
-            import math
-
-            return math.log(value + 1) if value >= 0 else 0
-        else:
-            # 默认处理
-            return value
+            self._logger.exception("数据处理失败")
+            raise AnalysisError("数据处理失败") from e
 
 
 # 全局服务实例

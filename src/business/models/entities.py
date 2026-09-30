@@ -3,6 +3,8 @@
 使用Pydantic定义业务数据模型，提供数据验证和序列化功能。
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from enum import Enum
 from typing import Any

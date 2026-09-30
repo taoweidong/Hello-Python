@@ -3,6 +3,20 @@
 提供核心业务逻辑服务，处理数据分析和业务流程。
 """
 
-from .analysis_service import AnalysisService, DataProcessingService, get_analysis_service, get_data_processing_service
+from __future__ import annotations
 
-__all__ = ["AnalysisService", "DataProcessingService", "get_analysis_service", "get_data_processing_service"]
+from .analysis_service import (
+    AnalysisError,
+    AnalysisService,
+    DataProcessingService,
+    get_analysis_service,
+    get_data_processing_service,
+)
+
+__all__ = [
+    "AnalysisError",
+    "AnalysisService",
+    "DataProcessingService",
+    "get_analysis_service",
+    "get_data_processing_service",
+]

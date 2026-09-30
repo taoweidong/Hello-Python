@@ -4,4 +4,6 @@
 新项目可以基于此模板快速开发具体的业务功能。
 """
 
+from __future__ import annotations
+
 __version__ = "1.0.0"

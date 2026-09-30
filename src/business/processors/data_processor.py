@@ -1,7 +1,10 @@
 """数据处理器实现
 
 提供数据处理的核心逻辑和管道功能。
+依赖通过构造函数注入（默认使用全局工厂），便于测试时替换实现。
 """
+
+from __future__ import annotations
 
 import time
 from collections.abc import Callable
@@ -10,23 +13,31 @@ from typing import Any
 
 from ...core.exceptions import CoreException
 from ...core.logging import get_logger
-from ..models import DataRecord, ProcessedData, get_data_validator
-from ..repositories import get_data_repository
+from ..models import DataRecord, DataValidator, ProcessedData, get_data_validator
+from ..repositories import DataRepositoryProtocol, get_data_repository
+from .strategies import PROCESSING_STRATEGIES
 
 
 class ProcessingError(CoreException):
     """数据处理错误异常"""
 
-    pass
-
 
 class DataProcessor:
     """数据处理器"""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        repository: DataRepositoryProtocol | None = None,
+        validator: DataValidator | None = None,
+    ) -> None:
+        """
+        Args:
+            repository:数据仓库，默认使用全局实例；测试时可注入内存实现
+            validator:数据验证器，默认使用全局实例
+        """
         self._logger = get_logger()
-        self._repository = get_data_repository()
-        self._validator = get_data_validator()
+        self._repository = repository or get_data_repository()
+        self._validator = validator or get_data_validator()
         self._processed_count = 0
 
     def load_and_process_csv(
@@ -69,12 +80,14 @@ class DataProcessor:
             self._logger.info(f"CSV文件处理完成，共处理 {len(processed_data)}条记录，耗时: {duration:.2f}秒")
             return processed_data
 
+        except ProcessingError:
+            raise
         except Exception as e:
-            self._logger.error(f"CSV文件处理失败: {e}")
-            raise ProcessingError(f"CSV文件处理失败: {e}")
+            self._logger.exception("CSV文件处理失败")
+            raise ProcessingError("CSV文件处理失败") from e
 
     def _apply_default_processing(self, data_records: list[DataRecord]) -> list[ProcessedData]:
-        """应用默认处理步骤
+        """应用默认处理步骤（min-max 归一化，见 strategies.normalize）
 
         Args:
             data_records:数据记录列表
@@ -82,35 +95,33 @@ class DataProcessor:
         Returns:
             List[ProcessedData]:处理后的数据列表
         """
+        normalize = PROCESSING_STRATEGIES["normalization"]
+        processed_values = normalize([record.value for record in data_records])
         processed_data: list[ProcessedData] = []
 
-        for record in data_records:
+        for index, (record, processed_value) in enumerate(zip(data_records, processed_values)):
             # 验证数据
             validation_result = self._validator.validate_data_record(record.model_dump())
             if not validation_result:
                 self._logger.warning(f"数据验证失败: {', '.join(validation_result.errors)}")
                 continue
 
-            # 简单处理：数值标准化
-            processed_value = record.value / 100.0 if record.value != 0 else 0
-
-            # 创建处理后的数据
-            processed_record = ProcessedData(
-                id=f"processed_{int(time.time() * 1000000)}_{len(processed_data)}",
-                original_id=record.id or str(int(time.time())),
-                name=record.name,
-                original_value=record.value,
-                processed_value=processed_value,
-                category=record.category,
-                processing_type="normalization",
-                metadata={
-                    "processing_method": "normalization",
-                    "original_status": record.status.value,
-                    "processing_time": datetime.now().isoformat(),
-                },
+            processed_data.append(
+                ProcessedData(
+                    id=f"processed_{int(time.time() * 1000000)}_{index}",
+                    original_id=record.id or str(int(time.time())),
+                    name=record.name,
+                    original_value=record.value,
+                    processed_value=processed_value,
+                    category=record.category,
+                    processing_type="normalization",
+                    metadata={
+                        "processing_method": "normalization",
+                        "original_status": record.status.value,
+                        "processing_time": datetime.now().isoformat(),
+                    },
+                )
             )
-
-            processed_data.append(processed_record)
 
         return processed_data
 
@@ -132,7 +143,7 @@ class DataProcessingPipeline:
         self._logger = get_logger()
         self._steps: list[Callable[..., Any]] = []
 
-    def add_step(self, step: Callable[..., Any]) -> "DataProcessingPipeline":
+    def add_step(self, step: Callable[..., Any]) -> DataProcessingPipeline:
         """添加处理步骤
 
         Args:
@@ -166,8 +177,8 @@ class DataProcessingPipeline:
                 self._logger.debug(f"执行处理步骤 {i + 1}")
                 result = step(result)
             except Exception as e:
-                self._logger.error(f"处理步骤 {i + 1}执行失败: {e}")
-                raise ProcessingError(f"处理步骤 {i + 1}执行失败: {e}")
+                self._logger.exception(f"处理步骤 {i + 1}执行失败")
+                raise ProcessingError(f"处理步骤 {i + 1}执行失败") from e
 
         self._logger.info(f"处理管道执行完成，输出记录数: {len(result)}")
         return result
@@ -199,7 +210,7 @@ def get_processing_pipeline() -> DataProcessingPipeline:
     """获取全局处理管道实例
 
     Returns:
-        DataProcessingPipeline:处理管道实例
+        DataProcessingPipeline:数据处理管道实例
     """
     global _processing_pipeline
     if _processing_pipeline is None:

@@ -4,45 +4,29 @@
 
 ```
 tests/
-├── config/                 # 配置相关测试
-│   ├── test_settings.py    # 设置模块测试
-│   └── test_logging_config.py  # 日志配置测试
-├── db/                     # 数据库相关测试
-│   ├── test_database.py    # 数据库功能测试
-│   └── test_simple.py      # 数据库简单功能测试
-├── test_cli.py             # CLI测试
-├── test_click_demo.py      # Click命令行工具测试
-├── test_data_processor.py  # 数据处理模块测试
-├── test_env_config.py      # 环境配置测试
-├── test_pydantic_validation.py  # Pydantic数据验证测试
-└── test_runner.py          # 测试入口文件
+├── conftest.py               # 全局 fixtures：sqlite_db_manager（独立临时库）
+├── fixtures/
+│   └── test_data.py          # CSV 测试数据、InMemoryRepository（协议的内存实现）
+├── unit/
+│   └── test_database.py      # 数据库管理器 / CRUD / 事务与重试装饰器
+├── core/
+│   ├── test_core_modules.py  # 配置 / 日志 / 异常
+│   ├── test_app.py           # 应用启动流程
+│   └── test_security.py      # URL 脱敏
+├── business/
+│   ├── test_business_logic.py      # 组件创建
+│   ├── test_analysis_service.py    # 统计/趋势分析、数据处理服务
+│   ├── test_entities.py            # 领域模型与验证器
+│   └── test_strategies.py          # 处理策略
+├── integration/
+│   └── test_application.py   # 全链路：CSV → 入库 → 处理 → 分析 → 回读
+├── interfaces/
+│   └── test_cli.py           # CLI 命令
+└── test_data_processor.py    # 数据处理器
 ```
 
-## 运行测试
+## 约定
 
-### 运行所有测试
-
-```bash
-python tests/test_runner.py
-```
-
-或者：
-
-```bash
-python -m tests.test_runner
-```
-
-### 运行单个测试文件
-
-```bash
-python -m tests.config.test_settings
-python -m tests.db.test_database
-# ... 其他测试文件
-```
-
-### 运行特定测试类或方法
-
-```bash
-python -m unittest tests.config.test_settings.TestConfig
-python -m unittest tests.config.test_settings.TestConfig.test_config_loading
-```
+- 数据库测试使用 `sqlite_db_manager` fixture（pytest `tmp_path`，每个测试独立库文件）
+- 服务层测试优先注入 `InMemoryRepository`（演示面向 `DataRepositoryProtocol` 替换实现）
+- 覆盖率门禁：CI 要求 `--cov-fail-under=80`

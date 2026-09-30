@@ -3,18 +3,25 @@
 提供类型安全的日志接口，支持控制台和文件输出，可配置日志级别和格式。
 """
 
+from __future__ import annotations
+
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger as loguru_logger
 
 from ..config import Settings, get_settings
 
+if TYPE_CHECKING:
+    # loguru 运行时不导出 Logger 类型，仅供类型检查使用
+    from loguru import Logger as LoguruLogger
+
 
 class Logger:
     """日志管理器类
 
-    封日志功能，提供统一的接口。
+    封装日志功能，提供统一的接口。
     """
 
     def __init__(self, settings: Settings | None = None):
@@ -55,9 +62,9 @@ class Logger:
     def _setup_file_logging(self) -> None:
         """设置文件日志记录"""
         try:
-            # 确保日志目录存在
-            log_dir = Path("logs")
-            log_dir.mkdir(exist_ok=True)
+            # 确保日志目录存在（目录来自配置，避免随进程 CWD 漂移）
+            log_dir = Path(self._settings.LOG_DIR)
+            log_dir.mkdir(parents=True, exist_ok=True)
 
             log_file = log_dir / f"{self._settings.APP_NAME.lower()}.log"
             self._logger.add(
@@ -78,37 +85,37 @@ class Logger:
         self._logger.add(sys.stdout, level="INFO")
         self._is_configured = True
 
-    def debug(self, message: str, *args, **kwargs) -> None:
+    def debug(self, message: str, *args: Any, **kwargs: Any) -> None:
         """输出调试信息"""
         if not self._is_configured:
             self.setup()
         self._logger.debug(message, *args, **kwargs)
 
-    def info(self, message: str, *args, **kwargs) -> None:
+    def info(self, message: str, *args: Any, **kwargs: Any) -> None:
         """输出信息"""
         if not self._is_configured:
             self.setup()
         self._logger.info(message, *args, **kwargs)
 
-    def warning(self, message: str, *args, **kwargs) -> None:
+    def warning(self, message: str, *args: Any, **kwargs: Any) -> None:
         """输出警告信息"""
         if not self._is_configured:
             self.setup()
         self._logger.warning(message, *args, **kwargs)
 
-    def error(self, message: str, *args, **kwargs) -> None:
+    def error(self, message: str, *args: Any, **kwargs: Any) -> None:
         """输出错误信息"""
         if not self._is_configured:
             self.setup()
         self._logger.error(message, *args, **kwargs)
 
-    def critical(self, message: str, *args, **kwargs) -> None:
+    def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
         """输出严重错误信息"""
         if not self._is_configured:
             self.setup()
         self._logger.critical(message, *args, **kwargs)
 
-    def exception(self, message: str, *args, **kwargs) -> None:
+    def exception(self, message: str, *args: Any, **kwargs: Any) -> None:
         """输出异常信息"""
         if not self._is_configured:
             self.setup()
@@ -119,7 +126,7 @@ class Logger:
         """检查日志是否已配置"""
         return self._is_configured
 
-    def get_logger(self):
+    def get_logger(self) -> LoguruLogger:
         """获取底层日志记录器"""
         if not self._is_configured:
             self.setup()
@@ -159,31 +166,31 @@ def setup_logger(settings: Settings | None = None) -> Logger:
     return logger
 
 
-def debug(message: str, *args, **kwargs) -> None:
+def debug(message: str, *args: Any, **kwargs: Any) -> None:
     """全局调试日志函数"""
     get_logger().debug(message, *args, **kwargs)
 
 
-def info(message: str, *args, **kwargs) -> None:
+def info(message: str, *args: Any, **kwargs: Any) -> None:
     """全局信息日志函数"""
     get_logger().info(message, *args, **kwargs)
 
 
-def warning(message: str, *args, **kwargs) -> None:
+def warning(message: str, *args: Any, **kwargs: Any) -> None:
     """全局警告日志函数"""
     get_logger().warning(message, *args, **kwargs)
 
 
-def error(message: str, *args, **kwargs) -> None:
+def error(message: str, *args: Any, **kwargs: Any) -> None:
     """全局错误日志函数"""
     get_logger().error(message, *args, **kwargs)
 
 
-def critical(message: str, *args, **kwargs) -> None:
+def critical(message: str, *args: Any, **kwargs: Any) -> None:
     """全局严重错误日志函数"""
     get_logger().critical(message, *args, **kwargs)
 
 
-def exception(message: str, *args, **kwargs) -> None:
+def exception(message: str, *args: Any, **kwargs: Any) -> None:
     """全局异常日志函数"""
     get_logger().exception(message, *args, **kwargs)

@@ -4,9 +4,11 @@
 不依赖任何项目特定代码，确保完全独立性和可复用性。
 """
 
+from __future__ import annotations
+
 from .base import Base
 from .crud import CRUDMixin
-from .decorators import transactional, with_db_session
+from .decorators import RETRYABLE_DB_ERRORS, retry_on_db_error, transactional, with_db_session
 from .manager import DatabaseManager, get_database_manager, initialize_database
 from .models import BaseModel
 
@@ -18,5 +20,7 @@ __all__ = [
     "CRUDMixin",
     "transactional",
     "with_db_session",
+    "retry_on_db_error",
+    "RETRYABLE_DB_ERRORS",
     "Base",
 ]

@@ -3,7 +3,10 @@
 使用Pydantic Settings提供类型安全的配置管理，支持环境变量覆盖。
 """
 
+from __future__ import annotations
+
 import os
+from typing import Any
 
 from dotenv import load_dotenv
 from pydantic import Field
@@ -28,6 +31,7 @@ class Settings(BaseSettings):
     # 日志配置
     LOG_LEVEL: str = Field(default="INFO", description="日志级别")
     LOG_FORMAT: str = Field(default="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", description="日志格式")
+    LOG_DIR: str = Field(default="logs", description="日志文件目录")
 
     # 数据配置
     DATA_INPUT_PATH: str = Field(default="data/input", description="数据输入目录")
@@ -35,13 +39,13 @@ class Settings(BaseSettings):
     DATA_SAMPLES_PATH: str = Field(default="data/samples", description="示例数据目录")
 
     # 数据库配置
-    DATABASE_URL: str = Field(default="sqlite:///./sql/app.db", description="数据库URL")
+    DATABASE_URL: str = Field(default="sqlite:///./data/app.db", description="数据库URL")
     DATABASE_ECHO: bool = Field(default=False, description="是否输出SQL语句")
 
     # 其配置
     DEBUG: bool = Field(default=False, description="调试模式")
 
-    def __init__(self, env_file: str | None = None, **kwargs):
+    def __init__(self, env_file: str | None = None, **kwargs: Any) -> None:
         """初始化配置
 
         Args:
@@ -58,9 +62,8 @@ class Settings(BaseSettings):
             if env_file != ".env" and os.path.exists(".env"):
                 env_file = ".env"
             else:
-                # 如果连默认文件都不存在，创建一个基本的配置文件
-                self._create_default_env_file()
-                env_file = ".env"
+                # 如果连默认文件都不存在，按当前环境创建一个基本的配置文件
+                self._create_default_env_file(env_file)
 
         # 加载环境变量
         load_dotenv(env_file, override=True)
@@ -68,7 +71,7 @@ class Settings(BaseSettings):
         # 调父类初始化
         super().__init__(**kwargs)
 
-    def _create_default_env_file(self) -> None:
+    def _create_default_env_file(self, env_file: str = ".env") -> None:
         """创建默认的环境配置文件"""
         default_content = """#应用配置
 APP_NAME=Hello-Python
@@ -80,6 +83,7 @@ APP_ENV=development
 
 # 日志配置
 LOG_LEVEL=INFO
+LOG_DIR=logs
 LOG_FORMAT={time:YYYY-MM-DD HH:mm:ss} | {level} | {message}
 
 # 数据配置
@@ -88,14 +92,14 @@ DATA_OUTPUT_PATH=data/output
 DATA_SAMPLES_PATH=data/samples
 
 # 数据库配置
-DATABASE_URL=sqlite:///./sql/app.db
+DATABASE_URL=sqlite:///./data/app.db
 DATABASE_ECHO=false
 
 #调试配置
 DEBUG=false
 """
 
-        with open(".env", "w", encoding="utf-8") as f:
+        with open(env_file, "w", encoding="utf-8") as f:
             f.write(default_content)
 
 

@@ -1,12 +1,16 @@
 """数据库基础模型类
 
 提供所有数据库模型的基类，包含通用字段和方法。
+使用 SQLAlchemy 2.0 的 Mapped 类型化声明，ORM 字段具有完整类型信息。
 """
+
+from __future__ import annotations
 
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, String
+from sqlalchemy import DateTime, String
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 from .crud import CRUDMixin
@@ -17,9 +21,9 @@ class BaseModel(CRUDMixin, Base):
 
     __abstract__ = True
 
-    id = Column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self) -> dict:
         """将模型实例转换为字典

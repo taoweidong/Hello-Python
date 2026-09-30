@@ -7,17 +7,21 @@ __pycache__/
 dist/
 *.egg-info/
 *.spec
-build/
+build/dist/
+build/temp/
 
 # Coverage reports
 .coverage
+.coverage.*
 htmlcov/
 
 # Logs
 logs/
 
-# Environment files
+# Environment files（.env.example 是模板，保留跟踪）
 .env
+.env.*
+!.env.example
 
 # IDE
 .vscode/

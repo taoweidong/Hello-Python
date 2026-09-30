@@ -1,164 +1,98 @@
 """集成测试
 
-测试应用程序各组件之间的集成。
+验证 core + business 全链路：CSV 加载 → 入库 → 处理 → 分析 → 持久化查询。
+使用 tmp_path 独立 sqlite 文件，测试间完全隔离。
 """
 
-# 导入测试fixtures
-import sys
+from pathlib import Path
 
-import pandas as pd
 import pytest
 
-from src.config import get_config_manager, setup_logger
-from src.infrastructure.database import get_database_manager, initialize_database
-from src.models import ProcessedUserData, UserData
-from src.services import get_data_processor
+from src.business.models import DataRecord, tables  # noqa: F401  tables 确保业务表注册到 Base.metadata
+from src.business.repositories import DataRepository, RepositoryError
+from src.business.services import AnalysisError, AnalysisService, DataProcessingService
+from src.core.database import DatabaseManager
+from src.core.database.base import Base
 
-sys.path.append("tests/fixtures")
+
+@pytest.fixture
+def integration_db(tmp_path: Path) -> DatabaseManager:
+    """创建独立的集成测试数据库（已建业务表）"""
+    manager = DatabaseManager(f"sqlite:///{tmp_path / 'integration.db'}")
+    Base.metadata.create_all(bind=manager.get_engine())
+    return manager
 
 
-class TestApplicationIntegration:
-    """应用程序集成测试"""
+class TestDataPipelineIntegration:
+    """数据管道集成测试"""
 
-    @pytest.fixture
-    def app_components(self):
-        """设置应用程序组件"""
-        # 初始化配置
-        config_manager = get_config_manager()
-        config = config_manager.load_configuration()
+    def test_csv_to_persistence_to_analysis(self, integration_db, analysis_csv_test_data):
+        """完整链路：加载CSV → 原始记录入库 → 处理入库 → 统计分析入库"""
+        repository = DataRepository(db_manager=integration_db)
 
-        # 设置日志
-        logger = setup_logger(config)
+        # 1. 加载并入库原始记录
+        records = repository.load_data_from_csv(analysis_csv_test_data["file_path"])
+        assert len(records) == analysis_csv_test_data["row_count"]
 
-        # 初始化数据库
-        initialize_database(default_url="sqlite:///:memory:")
+        saved = repository.save_data_records(records)
+        assert all(record.id is not None for record in saved), "入库后记录应携带数据库ID"
 
-        # 获取数据处理器
-        data_processor = get_data_processor()
+        # 2. 处理数据（内部会批量保存处理结果）
+        service = DataProcessingService(repository=repository)
+        processed = service.process_data_records(saved, "normalization")
+        assert len(processed) == len(saved)
 
-        return {"config": config, "logger": logger, "data_processor": data_processor}
+        # 3. 处理结果已持久化，可按原始ID查询
+        fetched = repository.get_processed_data(processed[0].original_id)
+        assert fetched is not None
+        assert fetched.name == processed[0].name
+        assert fetched.processing_type == "normalization"
 
-    def test_config_and_logger_integration(self, app_components):
-        """测试配置和日志集成"""
-        config = app_components["config"]
-        logger = app_components["logger"]
+        # 4. 统计分析（结果入库）
+        analysis = AnalysisService(repository=repository).perform_statistical_analysis(saved)
+        assert analysis.statistics is not None
+        assert analysis.statistics["count"] == len(saved)
 
-        assert config is not None
-        assert logger is not None
+    def test_get_data_records_roundtrip(self, integration_db, analysis_csv_test_data):
+        """原始记录保存后可查询回读"""
+        repository = DataRepository(db_manager=integration_db)
+        records = repository.load_data_from_csv(analysis_csv_test_data["file_path"])
+        repository.save_data_records(records)
 
-        # 验证配置值
-        assert hasattr(config, "APP_NAME")
-        assert hasattr(config, "LOG_LEVEL")
+        fetched = repository.get_data_records(limit=100)
+        assert len(fetched) == analysis_csv_test_data["row_count"]
+        assert {record.name for record in fetched} == {record.name for record in records}
 
-        # 验证日志功能
-        logger.info("集成测试日志消息")
+    def test_invalid_rows_skipped_not_fatal(self, integration_db, csv_with_invalid_rows):
+        """无效行（负值/空名称）跳过并告警，不中断整体加载"""
+        repository = DataRepository(db_manager=integration_db)
+        records = repository.load_data_from_csv(csv_with_invalid_rows)
+        assert len(records) == 2  # ok_one / ok_two
+        assert all(record.value >= 0 for record in records)
 
-    def test_data_processing_pipeline(self, app_components, csv_test_data):
-        """测试数据处理完整流程"""
-        data_processor = app_components["data_processor"]
+    def test_load_missing_csv_raises(self, integration_db):
+        """加载不存在的文件应抛出 RepositoryError"""
+        repository = DataRepository(db_manager=integration_db)
+        with pytest.raises(RepositoryError, match="数据文件不存在"):
+            repository.load_data_from_csv("no_such_file.csv")
 
-        # 1. 加载数据
-        df = data_processor.load_data(csv_test_data["file_path"])
-        assert len(df) == csv_test_data["row_count"]
+    def test_analysis_empty_input_raises(self, integration_db):
+        """空数据触发 AnalysisError，且不被二次包裹"""
+        service = AnalysisService(repository=DataRepository(db_manager=integration_db))
+        with pytest.raises(AnalysisError, match="数据记录为空"):
+            service.perform_statistical_analysis([])
 
-        # 2.验证数据模型
-        for _, row in df.iterrows():
-            user_data = UserData(name=str(row["name"]), age=int(row["age"]), city=str(row["city"]))
-            assert user_data.name is not None
-            assert user_data.age >= 0
-            assert user_data.city is not None
+    def test_di_injection(self, integration_db):
+        """服务依赖可注入：同一数据库上各组件共享数据"""
+        repository = DataRepository(db_manager=integration_db)
+        processing = DataProcessingService(repository=repository)
+        analysis = AnalysisService(repository=repository)
 
-        # 3.处理数据
-        processed_df = data_processor.process_data(df)
-        assert "processed" in processed_df.columns
-        assert "processed_at" in processed_df.columns
-        assert processed_df["processed"].all()
-
-        # 4.验证处理后的数据模型
-        for _, row in processed_df.iterrows():
-            processed_data = ProcessedUserData(
-                name=str(row["name"]), age=int(row["age"]), city=str(row["city"]), processed=bool(row["processed"])
-            )
-            assert processed_data.processed is True
-            assert processed_data.processed_at is not None
-
-        # 5.检查计数器
-        assert data_processor.processed_count == len(processed_df)
-
-    def test_error_handling_integration(self, app_components):
-        """测试错误处理集成"""
-        data_processor = app_components["data_processor"]
-
-        # 测试文件不存在错误
-        with pytest.raises(Exception) as exc_info:
-            data_processor.load_data("nonexistent.csv")
-        assert "不存在" in str(exc_info.value) or "not found" in str(exc_info.value).lower()
-
-        # 测试数据验证错误
-        invalid_data = pd.DataFrame(
-            {
-                "name": ["Alice", ""],  # 第二行有空姓名
-                "age": [25, -5],  # 第二行有无效年龄
-                "city": ["New York", "London"],
-            }
+        records = repository.save_data_records(
+            [DataRecord(name=f"item_{i}", value=float(i), category="demo") for i in range(1, 6)]
         )
+        processed = processing.process_data_records(records, "standardization")
+        result = analysis.perform_statistical_analysis(records)
 
-        with pytest.raises(Exception) as exc_info:
-            data_processor.process_data(invalid_data)
-        assert "验证" in str(exc_info.value) or "validation" in str(exc_info.value).lower()
-
-    def test_configuration_based_processing(self, app_components, csv_test_data, test_output_dir):
-        """测试基于配置的数据处理"""
-        _ = app_components["config"]  # 验证 config 存在
-        data_processor = app_components["data_processor"]
-
-        # 使用配置中的数据文件路径
-        input_path = csv_test_data["file_path"]
-        output_path = test_output_dir / "config_based_output.csv"
-
-        # 处理数据
-        df = data_processor.load_data(input_path)
-        processed_df = data_processor.process_data(df)
-        data_processor.save_data(processed_df, str(output_path))
-
-        # 验证结果
-        assert output_path.exists()
-        result_df = pd.read_csv(output_path)
-        assert len(result_df) == len(processed_df)
-        assert "processed" in result_df.columns
-
-
-class TestDatabaseIntegration:
-    """数据库集成测试"""
-
-    @pytest.fixture
-    def database_components(self):
-        """设置数据库组件"""
-        # 初始化数据库
-        initialize_database(default_url="sqlite:///:memory:")
-        database_manager = get_database_manager()
-
-        return {"database_manager": database_manager}
-
-    def test_database_connection_and_operations(self, database_components):
-        """测试数据库连接和操作"""
-        db_manager = database_components["database_manager"]
-
-        # 测试连接
-        assert db_manager.test_connection() is True
-
-        # 测试数据库信息
-        info = db_manager.get_database_info()
-        assert info["name"] == "default"
-        assert info["connected"] is True
-
-        # 测试表创建
-        db_manager.create_tables()
-
-        # 测试获取引擎
-        engine = db_manager.get_engine()
-        assert engine is not None
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+        assert len(processed) == 5
+        assert result.statistics["mean"] == 3.0

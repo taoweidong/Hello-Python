@@ -3,20 +3,31 @@
 提供事务处理和会话管理的装饰器功能。
 """
 
-import contextlib
+from __future__ import annotations
+
 import random
 import time
 from collections.abc import Callable
 from functools import wraps
-from typing import Any
+from typing import Concatenate, ParamSpec, TypeVar
 
+from sqlalchemy.exc import InterfaceError, OperationalError
 from sqlalchemy.orm import Session
 
 from ..exceptions import DatabaseError
 from .manager import get_database_manager
 
+P = ParamSpec("P")
+R = TypeVar("R")
 
-def transactional(db_name: str | None = None, auto_commit: bool = True):
+# 允许重试的数据库异常：连接类故障（超时、锁定、断连）。
+# 注意：IntegrityError 等确定性错误重试无意义，不在此列。
+RETRYABLE_DB_ERRORS: tuple[type[Exception], ...] = (OperationalError, InterfaceError)
+
+
+def transactional(
+    db_name: str | None = None, auto_commit: bool = True
+) -> Callable[[Callable[Concatenate[Session, P], R]], Callable[P, R]]:
     """事务处理装饰器
     自动处理数据库事务，包括提交和回滚
 
@@ -28,51 +39,43 @@ def transactional(db_name: str | None = None, auto_commit: bool = True):
         Callable:装饰器函数
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[Concatenate[Session, P], R]) -> Callable[P, R]:
         @wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             manager = get_database_manager()
 
             # 设置当前数据库
             if db_name:
                 manager.set_current_db_name(db_name)
 
-            # 查找参数中的数据库会话
-            db_session = None
-            for i, arg in enumerate(args):
-                if isinstance(arg, Session):
-                    db_session = arg
-                    break
+            # 查找参数中已有的数据库会话（外部管理事务时不重复创建）
+            existing_session = next((arg for arg in args if isinstance(arg, Session)), None)
+            session_owner = existing_session is None
 
-            db_gen = None
-            # 如果没有找到数据库会话，创建一个新的
-            if db_session is None:
-                db_gen = manager.get_db_session(db_name)
-                db_session = next(db_gen)
-                # 将数据库会话添加到参数中
-                args = (db_session,) + args
-                close_session = True
+            if existing_session is None:
+                db_session = manager.get_session(db_name)
+                # 将数据库会话作为第一个参数传入
+                call_args = (db_session, *args)
             else:
-                close_session = False
+                db_session = existing_session
+                call_args = args
 
             try:
-                result = func(*args, **kwargs)
+                # 会话注入是动态行为，Concatenate 类型无法静态表达
+                result = func(*call_args, **kwargs)  # type: ignore[arg-type]
 
-                # 只有在需要自动提交且没有外部提供的会话时才提交
-                if auto_commit and close_session:
+                # 只有在自动提交且会话由本装饰器创建时才提交
+                if auto_commit and session_owner:
                     db_session.commit()
 
                 return result
-            except Exception as e:
+            except Exception:
                 # 发生异常时总是回滚
                 db_session.rollback()
-                raise e
+                raise
             finally:
-                if close_session and db_gen:
+                if session_owner:
                     db_session.close()
-                    # 关闭生成器
-                    with contextlib.suppress(StopIteration):
-                        next(db_gen)
 
         return wrapper
 
@@ -82,12 +85,13 @@ def transactional(db_name: str | None = None, auto_commit: bool = True):
 class TransactionError(DatabaseError):
     """事务处理错误异常"""
 
-    pass
 
-
-def retry_on_db_error(max_retries: int = 3, delay: float = 1.0, backoff_factor: float = 2.0, jitter: bool = True):
+def retry_on_db_error(
+    max_retries: int = 3, delay: float = 1.0, backoff_factor: float = 2.0, jitter: bool = True
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """数据库错误重试装饰器
-    当数据库操作失败时自动重试
+    仅对 RETRYABLE_DB_ERRORS 中的连接类异常自动重试，
+    其他异常（如约束冲突、程序错误）直接抛出。
 
     Args:
         max_retries:最大重试次数
@@ -99,73 +103,36 @@ def retry_on_db_error(max_retries: int = 3, delay: float = 1.0, backoff_factor: 
         Callable:装饰器函数
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             retries = 0
             current_delay = delay
 
-            while retries <= max_retries:
+            while True:
                 try:
                     return func(*args, **kwargs)
-                except Exception as e:
-                    # 检查是否是数据库相关的错误
-                    if is_database_error(e):
-                        retries += 1
-                        if retries > max_retries:
-                            raise TransactionError(f"操作在 {max_retries}试重试后失败: {str(e)}")
+                except RETRYABLE_DB_ERRORS as e:
+                    retries += 1
+                    if retries > max_retries:
+                        raise TransactionError(f"操作在 {max_retries} 次重试后仍失败: {e}") from e
 
-                        # 计算下次重试的延迟时间
-                        if jitter:
-                            # 添加随机抖动（±50%）
-                            jitter_value = current_delay * 0.5 * (random.random() - 0.5)
-                            sleep_time = current_delay + jitter_value
-                        else:
-                            sleep_time = current_delay
+                    # 计算下次重试的延迟时间（指数退避 + 可选抖动）
+                    sleep_time = current_delay
+                    if jitter:
+                        sleep_time += current_delay * 0.5 * (random.random() - 0.5)
 
-                        time.sleep(sleep_time)
-
-                        # 延迟时间（指数退避）
-                        current_delay *= backoff_factor
-                    else:
-                        # 非数据库错误，直接抛出
-                        raise
+                    time.sleep(sleep_time)
+                    current_delay *= backoff_factor
 
         return wrapper
 
     return decorator
 
 
-def is_database_error(exception: Exception) -> bool:
-    """判断是否是数据库相关的错误
-
-    Args:
-        exception:异常对象
-
-    Returns:
-        bool:是否是数据库错误
-    """
-    db_error_keywords = [
-        "database",
-        "db",
-        "connection",
-        "timeout",
-        "locked",
-        "constraint",
-        "integrity",
-        "foreign key",
-        "unique",
-        "duplicate",
-        "no such table",
-    ]
-
-    error_str = str(exception).lower()
-    return any(keyword in error_str for keyword in db_error_keywords)
-
-
-def with_db_session(db_name: str | None = None):
+def with_db_session(db_name: str | None = None) -> Callable[[Callable[Concatenate[Session, P], R]], Callable[P, R]]:
     """数据库会话装饰器
-    自动为函数提供数据库会话参数
+    自动为函数提供数据库会话参数（作为第一个位置参数注入）。
 
     Args:
         db_name:数据库名称，如果为None则使用默认数据库
@@ -174,28 +141,21 @@ def with_db_session(db_name: str | None = None):
         Callable:装饰器函数
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[Concatenate[Session, P], R]) -> Callable[P, R]:
         @wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             manager = get_database_manager()
 
             # 设置当前数据库
             if db_name:
                 manager.set_current_db_name(db_name)
 
-            db_gen = manager.get_db_session(db_name)
-            db_session = next(db_gen)
+            db_session = manager.get_session(db_name)
             try:
                 # 将数据库会话作为第一个参数传递
-                result = func(db_session, *args, **kwargs)
-                return result
-            except Exception:
-                raise
+                return func(db_session, *args, **kwargs)
             finally:
                 db_session.close()
-                # 关闭生成器
-                with contextlib.suppress(StopIteration):
-                    next(db_gen)
 
         return wrapper
 

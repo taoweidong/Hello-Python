@@ -3,6 +3,8 @@
 提供项目中使用的核心异常类型，便于统一异常处理。
 """
 
+from __future__ import annotations
+
 
 class CoreException(Exception):
     """核心异常基类

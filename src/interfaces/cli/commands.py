@@ -3,27 +3,24 @@
 提供标准的命令行命令和交互功能。
 """
 
+from __future__ import annotations
+
 import sys
-from pathlib import Path
 
 import click
-
-# 添加项目根目录到sys.path
-CURRENT_DIR = Path.cwd()
-PROJECT_ROOT = CURRENT_DIR.parent if CURRENT_DIR.name == "dist" else CURRENT_DIR
-sys.path.insert(0, str(PROJECT_ROOT))
 
 from ...app import initialize_app
 from ...business.processors import get_data_processor
 from ...business.repositories import get_data_repository
 from ...business.services import get_analysis_service
 from ...core.exceptions import CoreException
+from ...core.utils import mask_database_url
 
 
 @click.group()
 @click.option("--env-file", help="环境配置文件路径")
 @click.pass_context
-def cli(ctx, env_file: str | None = None):
+def cli(ctx: click.Context, env_file: str | None = None) -> None:
     """数据分析项目命令行接口"""
     try:
         # 初始化应用
@@ -47,10 +44,9 @@ def cli(ctx, env_file: str | None = None):
     help="数据处理类型",
 )
 @click.pass_context
-def process_csv_cmd(ctx, input_file: str, processing_type: str):
+def process_csv_cmd(ctx: click.Context, input_file: str, processing_type: str) -> None:
     """处理CSV数据文件"""
     try:
-        ctx.obj["app"]
         logger = ctx.obj["logger"]
 
         logger.info(f"开始处理CSV文件: {input_file}")
@@ -77,7 +73,7 @@ def process_csv_cmd(ctx, input_file: str, processing_type: str):
 @click.option("--input-file", required=True, help="输入CSV文件路径")
 @click.option("--analysis-type", default="statistical", type=click.Choice(["statistical", "trend"]), help="分析类型")
 @click.pass_context
-def analyze_data_cmd(ctx, input_file: str, analysis_type: str):
+def analyze_data_cmd(ctx: click.Context, input_file: str, analysis_type: str) -> None:
     """分析数据"""
     try:
         obj = ctx.obj or {}
@@ -106,13 +102,13 @@ def analyze_data_cmd(ctx, input_file: str, analysis_type: str):
             stats = result.statistics or {}
             click.echo("统计分析完成:")
             click.echo(f" 记录数: {stats.get('count', 0)}")
-            click.echo(f" 平值: {stats.get('mean', 0):.2f}")
+            click.echo(f" 平均值: {stats.get('mean', 0):.2f}")
             click.echo(f" 标准差: {stats.get('std_dev', 0):.2f}")
         elif analysis_type == "trend":
             result = analysis_service.perform_trend_analysis(data_records)
             trend_info = result.statistics or {}
             click.echo("趋势分析完成:")
-            click.echo(f" 趋方向: {trend_info.get('trend_direction', 'unknown')}")
+            click.echo(f" 趋势方向: {trend_info.get('trend_direction', 'unknown')}")
             click.echo(f" 相关系数: {trend_info.get('correlation', 0):.3f}")
 
         logger.info("数据分析完成")
@@ -124,7 +120,7 @@ def analyze_data_cmd(ctx, input_file: str, analysis_type: str):
 
 @cli.command(name="status")
 @click.pass_context
-def status_cmd(ctx):
+def status_cmd(ctx: click.Context) -> None:
     """显示应用状态"""
     try:
         obj = ctx.obj or {}
@@ -139,7 +135,7 @@ def status_cmd(ctx):
         click.echo(f" 版本: {app.settings.APP_VERSION}")
         click.echo(f" 环境: {app.settings.APP_ENV.value}")
         click.echo(f"  日志级别: {app.settings.LOG_LEVEL}")
-        click.echo(f"  数据库URL: {app.settings.DATABASE_URL}")
+        click.echo(f"  数据库URL: {mask_database_url(app.settings.DATABASE_URL)}")
 
         # 显示处理统计
         processor = get_data_processor()
@@ -154,7 +150,7 @@ def status_cmd(ctx):
 
 @cli.command(name="reset")
 @click.pass_context
-def reset_cmd(ctx):
+def reset_cmd(ctx: click.Context) -> None:
     """重置应用计数器"""
     try:
         obj = ctx.obj or {}
@@ -174,7 +170,7 @@ def reset_cmd(ctx):
         sys.exit(1)
 
 
-def create_cli():
+def create_cli() -> click.Group:
     """创建CLI应用
 
     Returns:

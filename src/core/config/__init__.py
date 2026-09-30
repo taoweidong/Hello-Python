@@ -4,6 +4,8 @@
 支持多环境配置文件和环境变量覆盖。
 """
 
+from __future__ import annotations
+
 from .environment import Environment, detect_environment
 from .settings import Settings, get_settings
 

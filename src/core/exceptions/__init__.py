@@ -3,6 +3,8 @@
 定义项目中使用的核心异常基类和标准异常类型。
 """
 
+from __future__ import annotations
+
 from .base import ConfigurationError, CoreException, DatabaseError, InitializationError, ValidationError
 
 __all__ = ["CoreException", "ConfigurationError", "ValidationError", "DatabaseError", "InitializationError"]
