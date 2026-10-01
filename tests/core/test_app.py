@@ -1,4 +1,8 @@
-"""应用入口测试"""
+"""应用入口测试
+
+验证真实启动链路：配置加载 → 日志初始化 → 数据库连接与建表。
+数据库失败场景使用真实不可达的连接地址（故障来自环境而非替换被测逻辑）。
+"""
 
 from pathlib import Path
 
@@ -10,8 +14,24 @@ from src.core.exceptions import ConfigurationError, InitializationError
 ENV_TEMPLATE = """APP_NAME=ItApp
 LOG_LEVEL=INFO
 LOG_DIR={log_dir}
-DATABASE_URL=sqlite:///{db_path}
+DATABASE_URL={database_url}
 """
+
+
+def write_env(tmp_path: Path, database_url: str) -> Path:
+    env_file = tmp_path / ".env.test"
+    env_file.write_text(
+        ENV_TEMPLATE.format(log_dir=(tmp_path / "logs").as_posix(), database_url=database_url),
+        encoding="utf-8",
+    )
+    return env_file
+
+
+def reset_singletons(monkeypatch) -> None:
+    """重置全局单例，保证测试间隔离（非 mock，仅隔离）"""
+    monkeypatch.setattr("src.core.config.settings._settings", None)
+    monkeypatch.setattr("src.core.logging.logger._global_logger", None)
+    monkeypatch.setattr("src.core.database.manager._database_manager", None)
 
 
 class TestApplicationLifecycle:
@@ -28,15 +48,8 @@ class TestApplicationLifecycle:
 
     def test_initialize_success(self, tmp_path: Path, monkeypatch):
         """正常初始化：配置、日志、数据库表全部就绪"""
-        # 重置配置/日志/数据库全局单例，保证本测试用自己的环境
-        monkeypatch.setattr("src.core.config.settings._settings", None)
-        monkeypatch.setattr("src.core.logging.logger._global_logger", None)
-        monkeypatch.setattr("src.core.database.manager._database_manager", None)
-        env_file = tmp_path / ".env.test"
-        env_file.write_text(
-            ENV_TEMPLATE.format(log_dir=(tmp_path / "logs").as_posix(), db_path=(tmp_path / "app.db").as_posix()),
-            encoding="utf-8",
-        )
+        reset_singletons(monkeypatch)
+        env_file = write_env(tmp_path, f"sqlite:///{(tmp_path / 'app.db').as_posix()}")
 
         app = Application()
         app.initialize(str(env_file))
@@ -47,27 +60,22 @@ class TestApplicationLifecycle:
         assert (tmp_path / "app.db").exists(), "启动时应自动建库"
         assert (tmp_path / "logs").is_dir()
 
-    def test_db_failure_does_not_block_startup(self, tmp_path: Path, monkeypatch):
-        """数据库初始化失败仅告警，不阻断应用启动"""
-        monkeypatch.setattr("src.core.config.settings._settings", None)
-        monkeypatch.setattr("src.core.logging.logger._global_logger", None)
-
-        def broken_init(*args, **kwargs):
-            raise RuntimeError("connection refused")
-
-        monkeypatch.setattr("src.app.initialize_database", broken_init)
-        env_file = tmp_path / ".env.test"
-        env_file.write_text(
-            ENV_TEMPLATE.format(log_dir=(tmp_path / "logs").as_posix(), db_path=(tmp_path / "app.db").as_posix()),
-            encoding="utf-8",
-        )
+    def test_unreachable_db_does_not_block_startup(self, tmp_path: Path, monkeypatch):
+        """数据库真实不可达（连接被拒绝）时仅告警，不阻断应用启动"""
+        reset_singletons(monkeypatch)
+        env_file = write_env(tmp_path, "postgresql://admin:secret@127.0.0.1:1/unreachable")
 
         app = Application()
         app.initialize(str(env_file))
+
         assert app.is_initialized is True
 
     def test_config_error_wrapped_as_initialization_error(self, tmp_path: Path, monkeypatch):
-        """配置异常统一包装为 InitializationError 并保留异常链"""
+        """配置层 CoreException 统一包装为 InitializationError 并保留异常链
+
+        该防御分支无法通过真实输入触发（get_settings 正常路径不抛 CoreException），
+        故采用故障注入模拟底层配置异常。
+        """
         monkeypatch.setattr("src.core.config.settings._settings", None)
 
         def broken_settings(env_file=None):

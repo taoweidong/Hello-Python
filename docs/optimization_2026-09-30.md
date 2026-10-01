@@ -68,3 +68,24 @@ pytest tests/           107 passed, coverage 84%
 3. production 模式缺配置文件时，自动创建的是 `.env` 而非 `.env.production`，下次启动仍读不到
 
 最终：**123 个测试全部通过，覆盖率 86.03%**（门禁 80%），ruff/mypy 全绿；AST 复扫无"无真实断言"用例。
+
+## 单元测试零 mock 专项（同日第三轮）
+
+按"所有单元测试必须基于真实业务场景、禁止无效 mock"的要求再次审计：
+
+**审计结论**：非法 mock 全部集中在 `tests/interfaces/test_cli.py` —— `initialize_app` 被 mock 成 `Mock()`（应用启动链路被整体替换）、`test_reset_command` 用纯 Mock 处理器只断言"方法被调用过"。其余 monkeypatch 均为全局单例隔离（合法）。
+
+**改造**（全部改为真实端到端）：
+- CLI 测试走**真实启动链路**：测试写真实 `.env` → CLI 自己加载配置、初始化日志、连接独立 sqlite；`monkeypatch` 仅用于重置全局单例保证隔离
+- 新增真实场景断言：`process-csv` 处理真实 CSV 后经 `status` 观测计数；`reset` 真实清零；`analyze-data` 后**直接查询 sqlite 文件**验证 `analysis_results` 落库
+- 数据库不可达场景改用**真实连接失败**（`postgresql://...@127.0.0.1:1/...`），验证应用降级不崩溃且 URL 脱敏输出
+- `test_app.py` 的故障注入改为真实不可达连接（仅防御分支保留注入并在 docstring 说明）
+
+**真实测试再次揭出产品缺陷并修复**：
+- `DataRepository` 构造时急切解析全局数据库管理器，导致数据库驱动缺失（未装 psycopg2）时，`status` 这类不涉及库操作的命令也会崩溃——与应用"数据库失败仅告警、不阻断启动"的降级设计矛盾。已改为**惰性解析**（首次真正使用时才创建管理器）。
+
+**配套设施**：
+- 一键门禁入口 `run_tests.py`：`uv run python run_tests.py`（lint + 格式 + 类型 + 测试）或 `--tests-only`
+- 测试纪律写入根目录 `AGENTS.md`（禁止无效 mock 的判定标准、monkeypatch 白名单、每次变更后/会话结束前必须运行门禁并报告结果）
+
+最终：**126 个测试全部通过，覆盖率 86.92%**，ruff/mypy 全绿，测试代码中 `Mock/patch` 零使用。

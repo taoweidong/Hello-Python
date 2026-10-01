@@ -61,8 +61,19 @@ class DataRepository:
         Args:
             db_manager: 数据库管理器，默认使用全局实例；测试时可注入独立的内存库管理器
         """
-        self._db_manager = db_manager or get_database_manager()
+        self._manager_ref = db_manager
         self._logger = get_logger()
+
+    @property
+    def _db_manager(self) -> DatabaseManager:
+        """惰性解析数据库管理器
+
+        构造仓储不应依赖数据库驱动的可用性（例如未安装 psycopg2 时
+        status 等不涉及库操作的命令仍应正常工作），首次真正使用时才创建。
+        """
+        if self._manager_ref is None:
+            self._manager_ref = get_database_manager()
+        return self._manager_ref
 
     def load_data_from_csv(self, file_path: str) -> list[DataRecord]:
         """从CSV文件加载数据

@@ -54,11 +54,14 @@ uv run hello-python status
 ## 开发
 
 ```bash
-uv run pytest tests/                                # 测试（含覆盖率）
+uv run python run_tests.py              # 一键质量门禁：lint + 格式 + 类型 + 单元测试
+uv run python run_tests.py --tests-only # 仅单元测试（含覆盖率门禁 80%）
 uv run ruff check . --fix && uv run ruff format .   # lint + 格式化
 uv run mypy src                                     # 类型检查
 pre-commit install                                  # 提交钩子
 ```
+
+> 测试与 mock 纪律（禁止无效 mock、必须基于真实业务场景、每次变更/会话结束必须跑门禁）见 `AGENTS.md`。
 
 ## 二次开发入口
 
